@@ -1,0 +1,43 @@
+package org.usfirst.frc.team6929.robot;
+
+import edu.wpi.first.wpilibj.TimedRobot;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.networktables.NetworkTable;
+import edu.wpi.first.networktables.NetworkTableEntry;
+import edu.wpi.first.networktables.NetworkTableInstance;
+
+public class EasyNetworkTableExample extends TimedRobot {
+
+  NetworkTableEntry xEntry;
+  NetworkTableEntry yEntry;
+
+  public void robotInit() {
+    NetworkTableInstance inst = NetworkTableInstance.getDefault();
+    
+    NetworkTable table = inst.getTable("datatable");
+
+    xEntry = table.getEntry("X");
+    yEntry = table.getEntry("Y");
+  
+  }
+
+  double x = 0;
+  double y = 0;
+
+  public void teleopPeriodic() {
+    xEntry.setDouble(x);
+    yEntry.setDouble(y);
+    x += 0.05;
+    y += 1.0;
+    
+  double XValue =  xEntry.getDouble(053);
+  double Flags = xEntry.getFlags();
+  
+  SmartDashboard.putNumber("Flags", Flags);
+  SmartDashboard.putNumber("XValue", XValue);
+  
+  //DefaultValue = la valeur quand y'en a pas...
+  //Mais defaultvalue est peut-être le flag à prendre...
+  //J'hais les NetworkTables...
+  }
+}
