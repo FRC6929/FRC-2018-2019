@@ -1,0 +1,373 @@
+/*----------------------------------------------------------------------------*/
+/* Copyright (c) 2017-2018 FIRST. All Rights Reserved.                        */
+/* Open Source Software - may be modified and shared by FRC teams. The code   */
+/* must be accompanied by the FIRST BSD license file in the root directory of */
+/* the project.                                                               */
+/*----------------------------------------------------------------------------*/
+
+package org.usfirst.frc.team6929.robot;
+
+import edu.wpi.cscore.UsbCamera;
+import edu.wpi.first.networktables.NetworkTable;
+import edu.wpi.first.networktables.NetworkTableEntry;
+import edu.wpi.first.networktables.NetworkTableInstance;
+import edu.wpi.first.wpilibj.ADXRS450_Gyro;
+import edu.wpi.first.wpilibj.Joystick;
+import edu.wpi.first.wpilibj.PIDController;
+import edu.wpi.first.wpilibj.TimedRobot;
+import edu.wpi.first.wpilibj.Timer;
+import edu.wpi.first.wpilibj.VictorSP;
+
+import edu.wpi.first.wpilibj.drive.DifferentialDrive;
+import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.wpilibj.CameraServer;
+import edu.wpi.first.wpilibj.DigitalInput;
+import edu.wpi.first.wpilibj.DoubleSolenoid;
+
+
+/**
+ * The VM is configured to automatically run this class, and to call the
+ * functions corresponding to each mode, as described in the IterativeRobot
+ * documentation. If you change the name of this class or the package after
+ * creating this project, you must also update the manifest file in the resource
+ * directory.
+ */
+public class Robot extends TimedRobot {
+	VictorSP leftMotor = new VictorSP(0);
+	VictorSP rightMotor = new VictorSP(1);
+	private DifferentialDrive m_robotDrive = new DifferentialDrive(leftMotor, rightMotor);
+	private Joystick m_stick = new Joystick(0);
+	private ADXRS450_Gyro gyro = new ADXRS450_Gyro();
+	private Timer m_timer = new Timer();
+	DigitalInput limitswitch1;
+	DigitalInput limitswitch2;
+	
+	//Chooser
+	private static final String kDefaultAuto = "Mode 1";
+	private static final String kCustomAuto1 = "Mode 2";
+	private static final String kCustomAuto2 = "Mode 3";
+	private static final String kCustomAuto3 = "Mode 4";
+	private static final String kCustomAuto4 = "Mode 5";
+	private static final String kCustomAuto5 = "Mode 6";
+	
+	private String m_autoSelected;
+	private SendableChooser<String> m_chooser = new SendableChooser<>();
+	//PID
+	
+	private static final double kP = -0.02;
+	private static final double kI = -0.4;
+	private static final double kD = 0;
+	
+	private PIDController r_pidController;
+	private PIDController l_pidController;
+	
+	//Variables
+	NetworkTableEntry xCenterEntry;
+	 double[] centerX;
+	boolean Bbuton = false;
+	boolean Ybuton = false;
+	boolean lent = true;
+	boolean lentTrigger = false;
+	boolean YbutonTrigger = false;
+	boolean premiereMesure = false;
+	
+	DoubleSolenoid exampleDouble = new DoubleSolenoid(0, 7);
+	DoubleSolenoid pneuPince = new DoubleSolenoid(1, 6);
+	@Override
+	public void robotInit() {
+		gyro.reset();
+		UsbCamera camera = CameraServer.getInstance().startAutomaticCapture();
+		camera.setResolution(640, 360);
+		camera.setFPS(15);
+		limitswitch2 = new DigitalInput(1);
+		limitswitch1 = new DigitalInput(0);
+		
+		//PCM
+		
+		//Solenoid avant = new Solenoid(0);
+
+		//avant.set(true);
+
+		
+		//Solenoid arriere = new Solenoid(7);
+
+		//arriere.set(false);
+		
+		
+		
+		
+		
+
+		//exampleDouble.set(DoubleSolenoid.Value.kOff);
+	//exampleDouble.set(DoubleSolenoid.Value.kForward);
+	//	exampleDouble.set(DoubleSolenoid.Value.kReverse);
+		
+		
+		//Network
+		
+			NetworkTableInstance inst = NetworkTableInstance.getDefault();
+		    NetworkTable table = inst.getTable("GRIP/Contours");
+		    xCenterEntry = table.getEntry("centerX");
+		
+		    //Controller machin
+			m_chooser.addDefault("Mode 1", kDefaultAuto);
+			m_chooser.addObject("Mode 2", kCustomAuto1);
+			m_chooser.addObject("Mode 3", kCustomAuto2);
+			m_chooser.addObject("Mode 4", kCustomAuto3);
+			m_chooser.addObject("Mode 5", kCustomAuto4);
+			m_chooser.addObject("Mode 6", kCustomAuto5);
+			
+			SmartDashboard.putData(m_chooser);
+		    
+		//PID		
+		r_pidController = new PIDController(kP, kI, kD, gyro, rightMotor);
+		l_pidController = new PIDController(kP, kI, kD, gyro, leftMotor);
+	
+	}
+
+	/**
+	 * This function is run once each time the robot enters autonomous mode.
+	 */
+	@Override
+	public void autonomousInit() {
+		m_timer.reset();
+		m_timer.start();
+		m_autoSelected = m_chooser.getSelected();
+		System.out.println("Auto selected: " + m_autoSelected);
+	}
+
+	/**
+	 * This function is called periodically during autonomous.
+	 */
+	@Override
+	public void autonomousPeriodic() {
+		
+		switch (m_autoSelected) {
+		case kCustomAuto1:
+			// Put custom auto code here
+			break;
+			
+		case kCustomAuto2:
+			// Put custom auto code here
+			break;
+			
+		case kCustomAuto3:
+			// Put custom auto code here
+			break;
+			
+		case kCustomAuto4:
+			// Put custom auto code here
+			break;
+			
+		case kCustomAuto5:
+			// Put custom auto code here
+			break;
+			
+		case kDefaultAuto:
+		default:
+			// Put default auto code here
+			break;
+	}
+		
+		
+		
+		
+		
+	//	if(m_timer.get() < 2) {
+			//m_robotDrive.arcadeDrive(-0.6 ,0);
+		//}
+			//if(limitswitch1.get() == false || limitswitch2.get() == false) {
+				premiereMesure = false;
+			//} else {
+				double[] gripValuesX = new double[0];
+				double[] XValue =  xCenterEntry.getDoubleArray(gripValuesX);
+				double angleVise = 320 / 10.333;
+				
+				double calcul = 0;
+				 if(XValue.length != 0) {
+					 //changer calcul pour angleVise
+					 
+					
+						if(premiereMesure == false) {
+							double trouve =  XValue[0] / 10.333;
+							
+							 SmartDashboard.putNumber("Trouve", trouve);
+					
+							 gyro.reset();
+						premiereMesure = true;  
+						calcul = angleVise - trouve;
+						
+						SmartDashboard.putNumber("Calculs", calcul);
+				
+						}
+						if(premiereMesure == true) {
+							double angleGyro = gyro.getAngle();
+							  SmartDashboard.putNumber("Angle Gyro", angleGyro);
+							  double setPoint = calcul - angleGyro ;
+							  SmartDashboard.putNumber("Set Point", setPoint);
+							  m_robotDrive.arcadeDrive(-0.7, setPoint * 0.025);
+
+						}
+
+						}else {
+							  m_robotDrive.arcadeDrive(0, 0.4);
+						}
+			}
+			
+				 			  
+			
+			
+			 
+	//		}
+		
+	
+	@Override
+	public void teleopInit() {
+		
+		
+		r_pidController.enable();
+		r_pidController.setSetpoint(-53);
+		l_pidController.enable();
+		l_pidController.setSetpoint(-53);
+		
+	}
+
+	/**
+	 * This function is called periodically during teleoperated mode.
+	 */
+	@Override
+	public void teleopPeriodic() {
+		//Network Tables
+	
+	   
+		
+		
+		
+		
+		
+		//---------------Conduite-------------------------
+		if(Bbuton == false && YbutonTrigger == false) {
+			r_pidController.disable();
+			l_pidController.disable();
+			if(m_stick.getRawButton(9) == true  && lentTrigger == false) {
+				lent = !lent;
+				lentTrigger = true;
+			}
+			
+			if(m_stick.getRawButton(9) == false) {
+				lentTrigger = false;
+				}
+			
+		if (lent == false){
+			double ystick = m_stick.getRawAxis(2) *0.6 - m_stick.getRawAxis(3) * 0.6;
+			double xstick = - m_stick.getRawAxis(0) * 0.6;
+			m_robotDrive.arcadeDrive(ystick, xstick);
+		}	else if (lent == true) {
+			double ystick = m_stick.getRawAxis(2) * 2 - m_stick.getRawAxis(3);
+			double xstick = - m_stick.getRawAxis(0) * 0.75;
+			m_robotDrive.arcadeDrive(ystick, xstick);
+		}
+	
+		}
+		
+		
+		double angle = gyro.getAngle();
+		double angleabs = angle;
+		
+		boolean reset = m_stick.getRawButton(1);
+		
+		//----------------Calcul d'angle---------------------
+		if(angleabs > 0) {
+			double a = angleabs / 360;
+			int b = (int)a;
+			double c = angleabs - (b * 360);
+			if(c > 180) {
+				c -= 360;
+			}
+			else if(c <= 180) {
+				
+			}
+			angleabs = c;
+		}
+		else if(angleabs < 0) {
+			double a = angleabs / 360;
+			int b = (int)a;
+			double c = angleabs - (b * 360);
+			if(c < -180) {
+				c += 360;
+			}
+			else if(c >= -180) {}
+			angleabs = c;
+		}
+		else {}
+		//-----------Fin du calcul d'angle---------------
+		
+		if(reset == true){
+			gyro.reset();
+			r_pidController.setSetpoint(-53);
+			l_pidController.setSetpoint(-53);
+			pneuPince.set(DoubleSolenoid.Value.kReverse);
+			
+		}		
+			
+		SmartDashboard.putNumber("Gyro angle", angle);
+		SmartDashboard.putNumber("Gyro angle (ABS)", angleabs);
+
+		//----------------------------B buton-----------------------------------
+		
+		if(m_stick.getRawButton(2) == true && Bbuton == false) {
+			r_pidController.enable();
+			l_pidController.enable();
+		double obj = angle + 127.5;
+		r_pidController.setSetpoint(obj);
+		l_pidController.setSetpoint(obj);
+		Bbuton = true;
+		SmartDashboard.putNumber("PID objectif", obj);
+		pneuPince.set(DoubleSolenoid.Value.kForward);
+		}
+		
+		if(m_stick.getRawButton(2) == false) {
+		Bbuton = false;
+		}
+		//-----------------------Ybuton----------------------------
+		if(m_stick.getRawButton(4) == true && Ybuton == false){
+			
+			Ybuton = true;
+			SmartDashboard.putBoolean("Ybuton", Ybuton);
+			
+				if(YbutonTrigger == false){
+				//	r_pidController.enable();
+			//		l_pidController.enable();
+					l_pidController.setSetpoint(angle-53);
+					r_pidController.setSetpoint(angle-53);
+					gyro.reset();
+					exampleDouble.set(DoubleSolenoid.Value.kForward);
+					} else {
+						r_pidController.disable();
+						l_pidController.disable();
+						exampleDouble.set(DoubleSolenoid.Value.kReverse);
+						}
+			YbutonTrigger = !YbutonTrigger;
+			SmartDashboard.putBoolean("Ybuton", Ybuton);
+			}
+	
+		if(m_stick.getRawButton(4) == false) {
+			Ybuton = false;
+			SmartDashboard.putBoolean("Ybuton", Ybuton);
+			}
+	
+		if(YbutonTrigger == true) {
+			
+			double turningValue = gyro.getAngle() * 0.95;
+			SmartDashboard.putNumber("Turning Value", turningValue);
+			m_robotDrive.arcadeDrive(-0.65, turningValue);
+	
+		}
+		SmartDashboard.putBoolean("YbutonTrigger", YbutonTrigger);
+	}
+	
+	@Override
+	public void testPeriodic() {
+	}
+}
