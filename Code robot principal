@@ -4,8 +4,13 @@
 /* must be accompanied by the FIRST BSD license file in the root directory of */
 /* the project.                                                               */
 /*----------------------------------------------------------------------------*/
+//Ps. oui il n'y a pas d'accent. Fichtre d'ASCII
 
+//Nom du projet
 package org.usfirst.frc.team6929.robot;
+
+
+//Importations de code de la librairie de first
 
 import edu.wpi.cscore.UsbCamera;
 import edu.wpi.first.networktables.NetworkTable;
@@ -17,7 +22,6 @@ import edu.wpi.first.wpilibj.PIDController;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.VictorSP;
-
 import edu.wpi.first.wpilibj.drive.DifferentialDrive;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -25,15 +29,14 @@ import edu.wpi.first.wpilibj.CameraServer;
 import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.DoubleSolenoid;
 
+//-----------------Fin des importations et début du code!--------------------------------
 
-/**
- * The VM is configured to automatically run this class, and to call the
- * functions corresponding to each mode, as described in the IterativeRobot
- * documentation. If you change the name of this class or the package after
- * creating this project, you must also update the manifest file in the resource
- * directory.
- */
+//On annonce la classe. C'est une classe TimedRobot, 
+//ce qui signifie qu'elle va être appelée (Utilisée toutes les 20 ms (Constant))
+
 public class Robot extends TimedRobot {
+//On annonce les différentes variables des pieces du robot
+	
 	VictorSP leftMotor = new VictorSP(0);
 	VictorSP rightMotor = new VictorSP(1);
 	private DifferentialDrive m_robotDrive = new DifferentialDrive(leftMotor, rightMotor);
@@ -43,28 +46,43 @@ public class Robot extends TimedRobot {
 	DigitalInput limitswitch1;
 	DigitalInput limitswitch2;
 	
-	//Chooser
-	private static final String kDefaultAuto = "Mode 1";
-	private static final String kCustomAuto1 = "Mode 2";
-	private static final String kCustomAuto2 = "Mode 3";
-	private static final String kCustomAuto3 = "Mode 4";
-	private static final String kCustomAuto4 = "Mode 5";
-	private static final String kCustomAuto5 = "Mode 6";
+//Chooser
+	//Ce sont les variables permettant de choisir le mode autonome avant le match
+	//Elles sont un peu spéciales à cause de cela
 	
-	private String m_autoSelected;
-	private SendableChooser<String> m_chooser = new SendableChooser<>();
-	//PID
+		private static final String kDefaultAuto = "Mode 1";
+		private static final String kCustomAuto1 = "Mode 2";
+		private static final String kCustomAuto2 = "Mode 3";
+		private static final String kCustomAuto3 = "Mode 4";
+		private static final String kCustomAuto4 = "Mode 5";
+		private static final String kCustomAuto5 = "Mode 6";
+		private String m_autoSelected;
+		private SendableChooser<String> m_chooser = new SendableChooser<>();
 	
-	private static final double kP = -0.02;
-	private static final double kI = -0.4;
-	private static final double kD = 0;
 	
-	private PIDController r_pidController;
-	private PIDController l_pidController;
+//PID
+	//Les variables pour le régulateur PID (proportionnel, intégral, dérivé)
 	
-	//Variables
+	//Des constantes de PID qui marchent bien avec le robot
+		private static final double kP = -0.02;
+		private static final double kI = -0.4;
+		private static final double kD = 0;
+	
+	//Ont annonce le controlleur PID
+		private PIDController r_pidController;
+		private PIDController l_pidController;
+	
+	//Les variables du pneumatic
+		DoubleSolenoid exampleDouble = new DoubleSolenoid(0, 7);
+		DoubleSolenoid pneuPince = new DoubleSolenoid(1, 6);
+	
+	//Ah ce tres cher Network Table
 	NetworkTableEntry xCenterEntry;
 	 double[] centerX;
+	
+	
+	//Variables personnalisées (Qui ne sont que des variables fictives et non pas des éléments du robot)
+	
 	boolean Bbuton = false;
 	boolean Ybuton = false;
 	boolean lent = true;
@@ -72,77 +90,80 @@ public class Robot extends TimedRobot {
 	boolean YbutonTrigger = false;
 	boolean premiereMesure = false;
 	
-	DoubleSolenoid exampleDouble = new DoubleSolenoid(0, 7);
-	DoubleSolenoid pneuPince = new DoubleSolenoid(1, 6);
+	
+//Fin de l'annonce des variables
+
+//-----------------------Lancement du robot------------------------------------------
 	@Override
 	public void robotInit() {
+		
+//On setup certaines pieces des le demarage
 		gyro.reset();
 		UsbCamera camera = CameraServer.getInstance().startAutomaticCapture();
 		camera.setResolution(640, 360);
 		camera.setFPS(15);
 		limitswitch2 = new DigitalInput(1);
 		limitswitch1 = new DigitalInput(0);
+			
 		
-		//PCM
-		
-		//Solenoid avant = new Solenoid(0);
-
-		//avant.set(true);
-
-		
-		//Solenoid arriere = new Solenoid(7);
-
-		//arriere.set(false);
-		
-		
-		
-		
-		
-
+//Les trois versions du code de pneumatic qu'on peut utiliser, a se rappeler
 		//exampleDouble.set(DoubleSolenoid.Value.kOff);
-	//exampleDouble.set(DoubleSolenoid.Value.kForward);
-	//	exampleDouble.set(DoubleSolenoid.Value.kReverse);
+		//exampleDouble.set(DoubleSolenoid.Value.kForward);
+		//exampleDouble.set(DoubleSolenoid.Value.kReverse);
 		
 		
-		//Network
+//Network Tables
+	//On commence a collecter les donnes du network
+	
+		NetworkTableInstance inst = NetworkTableInstance.getDefault();
+		NetworkTable table = inst.getTable("GRIP/Contours");
+		xCenterEntry = table.getEntry("centerX");
 		
-			NetworkTableInstance inst = NetworkTableInstance.getDefault();
-		    NetworkTable table = inst.getTable("GRIP/Contours");
-		    xCenterEntry = table.getEntry("centerX");
-		
-		    //Controller machin
+//Selection mode auto
+	//On ajouter des options de mode autonomes
+	
 			m_chooser.addDefault("Mode 1", kDefaultAuto);
 			m_chooser.addObject("Mode 2", kCustomAuto1);
 			m_chooser.addObject("Mode 3", kCustomAuto2);
 			m_chooser.addObject("Mode 4", kCustomAuto3);
 			m_chooser.addObject("Mode 5", kCustomAuto4);
 			m_chooser.addObject("Mode 6", kCustomAuto5);
-			
+	
+	//Et on les mets sur le dashboard		
+	
 			SmartDashboard.putData(m_chooser);
 		    
-		//PID		
+//PID
+	//On active le PID
+	
 		r_pidController = new PIDController(kP, kI, kD, gyro, rightMotor);
 		l_pidController = new PIDController(kP, kI, kD, gyro, leftMotor);
-	
+
+//Fin du robot init	
 	}
 
-	/**
-	 * This function is run once each time the robot enters autonomous mode.
-	 */
+//-----------------------------On start le mode autonome------------------------- 
 	@Override
 	public void autonomousInit() {
+	//Ont active certains systemes
+	
 		m_timer.reset();
 		m_timer.start();
 		m_autoSelected = m_chooser.getSelected();
 		System.out.println("Auto selected: " + m_autoSelected);
+
+//Fin de autonomousInit
 	}
 
-	/**
-	 * This function is called periodically during autonomous.
-	 */
+
+//--------------------Mode autonome (Durant)----------------------------------
+//--------------------En chantier---------------------------------------------
+
 	@Override
 	public void autonomousPeriodic() {
-		
+	
+	//On selectione le mode autonome choisit
+	
 		switch (m_autoSelected) {
 		case kCustomAuto1:
 			// Put custom auto code here
@@ -170,10 +191,7 @@ public class Robot extends TimedRobot {
 			break;
 	}
 		
-		
-		
-		
-		
+			
 	//	if(m_timer.get() < 2) {
 			//m_robotDrive.arcadeDrive(-0.6 ,0);
 		//}
@@ -218,58 +236,67 @@ public class Robot extends TimedRobot {
 				 			  
 			
 			
-			 
+//Fin du mode autonome 
 	//		}
 		
-	
+
+//--------------------------Initialisation du mode teleopere--------------------------------
 	@Override
 	public void teleopInit() {
-		
+
+	//On active nos trucs
 		
 		r_pidController.enable();
 		r_pidController.setSetpoint(-53);
 		l_pidController.enable();
 		l_pidController.setSetpoint(-53);
-		
+
+//Fin de teleopInit
 	}
 
-	/**
-	 * This function is called periodically during teleoperated mode.
-	 */
+//----------------------------Deroulement du mode Teleop------------------------------------
 	@Override
 	public void teleopPeriodic() {
-		//Network Tables
-	
-	   
+
+//Network Tables
+	//C'est la qu'on va mettre nos Network Tables, si besoin est	
 		
 		
 		
 		
+//------------------------------------------Conduite-------------------------
 		
-		//---------------Conduite-------------------------
+		
+	//ici, on verifie si les boutons B et Y ne sont pas actionnes
 		if(Bbuton == false && YbutonTrigger == false) {
+		
+		//Desactivation du pid
 			r_pidController.disable();
 			l_pidController.disable();
+		
+		//Creation de l'effet de toggle 
 			if(m_stick.getRawButton(9) == true  && lentTrigger == false) {
 				lent = !lent;
 				lentTrigger = true;
-			}
+				}
 			
+		//Eviter d'appuyer 3000 fois sur le bouton en meme temps
 			if(m_stick.getRawButton(9) == false) {
 				lentTrigger = false;
 				}
-			
-		if (lent == false){
-			double ystick = m_stick.getRawAxis(2) *0.6 - m_stick.getRawAxis(3) * 0.6;
-			double xstick = - m_stick.getRawAxis(0) * 0.6;
-			m_robotDrive.arcadeDrive(ystick, xstick);
-		}	else if (lent == true) {
-			double ystick = m_stick.getRawAxis(2) * 2 - m_stick.getRawAxis(3);
-			double xstick = - m_stick.getRawAxis(0) * 0.75;
-			m_robotDrive.arcadeDrive(ystick, xstick);
-		}
-	
-		}
+		//Mode lent	
+			if (lent == false){
+				double ystick = m_stick.getRawAxis(2) *0.6 - m_stick.getRawAxis(3) * 0.6;
+				double xstick = - m_stick.getRawAxis(0) * 0.6;
+				m_robotDrive.arcadeDrive(ystick, xstick);
+				}
+		//Mode rapide
+			else if (lent == true) {
+				double ystick = m_stick.getRawAxis(2) * 2 - m_stick.getRawAxis(3);
+				double xstick = - m_stick.getRawAxis(0) * 0.75;
+				m_robotDrive.arcadeDrive(ystick, xstick);
+				}
+			}
 		
 		
 		double angle = gyro.getAngle();
@@ -278,6 +305,7 @@ public class Robot extends TimedRobot {
 		boolean reset = m_stick.getRawButton(1);
 		
 		//----------------Calcul d'angle---------------------
+		// De infinie vers -360 a 360
 		if(angleabs > 0) {
 			double a = angleabs / 360;
 			int b = (int)a;
@@ -301,70 +329,75 @@ public class Robot extends TimedRobot {
 			angleabs = c;
 		}
 		else {}
+		
+		SmartDashboard.putNumber("Gyro angle", angle);
+		SmartDashboard.putNumber("Gyro angle (ABS)", angleabs);
+		
 		//-----------Fin du calcul d'angle---------------
 		
+		
+		//----------------A Button------------------------
 		if(reset == true){
 			gyro.reset();
 			r_pidController.setSetpoint(-53);
 			l_pidController.setSetpoint(-53);
-			pneuPince.set(DoubleSolenoid.Value.kReverse);
+			pneuPince.set(DoubleSolenoid.Value.kReverse);	
+			}		
 			
-		}		
-			
-		SmartDashboard.putNumber("Gyro angle", angle);
-		SmartDashboard.putNumber("Gyro angle (ABS)", angleabs);
 
 		//----------------------------B buton-----------------------------------
+		//Garder B button enfonce pour qu'il finisse
 		
 		if(m_stick.getRawButton(2) == true && Bbuton == false) {
+		//Activation du PID	
 			r_pidController.enable();
 			l_pidController.enable();
-		double obj = angle + 127.5;
-		r_pidController.setSetpoint(obj);
-		l_pidController.setSetpoint(obj);
-		Bbuton = true;
-		SmartDashboard.putNumber("PID objectif", obj);
-		pneuPince.set(DoubleSolenoid.Value.kForward);
-		}
+			double obj = angle + 127.5;
+			r_pidController.setSetpoint(obj);
+			l_pidController.setSetpoint(obj);
+			Bbuton = true;
+			SmartDashboard.putNumber("PID objectif", obj);
+			pneuPince.set(DoubleSolenoid.Value.kForward);
+			}
 		
+	//Eviter 3000 fois le meme bouton. S'active quan on lache le bouton
 		if(m_stick.getRawButton(2) == false) {
-		Bbuton = false;
-		}
+			Bbuton = false;
+			}
+			
 		//-----------------------Ybuton----------------------------
+	//Si ont touche au button Y
 		if(m_stick.getRawButton(4) == true && Ybuton == false){
-			
 			Ybuton = true;
-			SmartDashboard.putBoolean("Ybuton", Ybuton);
 			
-				if(YbutonTrigger == false){
-				//	r_pidController.enable();
-			//		l_pidController.enable();
-					l_pidController.setSetpoint(angle-53);
-					r_pidController.setSetpoint(angle-53);
-					gyro.reset();
-					exampleDouble.set(DoubleSolenoid.Value.kForward);
-					} else {
-						r_pidController.disable();
-						l_pidController.disable();
-						exampleDouble.set(DoubleSolenoid.Value.kReverse);
-						}
+		//Si toggle pas active
+			if(YbutonTrigger == false){
+				gyro.reset();
+				exampleDouble.set(DoubleSolenoid.Value.kForward);
+				
+				} else {
+					r_pidController.disable();
+					l_pidController.disable();
+					exampleDouble.set(DoubleSolenoid.Value.kReverse);
+					}
+		//La raison pourquoi il toggle		
 			YbutonTrigger = !YbutonTrigger;
-			SmartDashboard.putBoolean("Ybuton", Ybuton);
+			}
+		//Quand on lache le bouton
+			if(m_stick.getRawButton(4) == false) {
+				Ybuton = false;
 			}
 	
-		if(m_stick.getRawButton(4) == false) {
-			Ybuton = false;
-			SmartDashboard.putBoolean("Ybuton", Ybuton);
-			}
-	
-		if(YbutonTrigger == true) {
+		//Si toggle == oui
+			if(YbutonTrigger == true) {
 			
-			double turningValue = gyro.getAngle() * 0.95;
-			SmartDashboard.putNumber("Turning Value", turningValue);
-			m_robotDrive.arcadeDrive(-0.65, turningValue);
+			//Setup le "PID" pour rester droit
+				double turningValue = gyro.getAngle() * 0.95;
+				SmartDashboard.putNumber("Turning Value", turningValue);
+				m_robotDrive.arcadeDrive(-0.65, turningValue);
+				}
 	
-		}
-		SmartDashboard.putBoolean("YbutonTrigger", YbutonTrigger);
+//Fin du teleop	
 	}
 	
 	@Override
