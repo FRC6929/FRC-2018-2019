@@ -1,0 +1,657 @@
+/*----------------------------------------------------------------------------*/
+/* Copyright (c) 2017-2018 FIRST. All Rights Reserved.                        */
+/* Open Source Software - may be modified and shared by FRC teams. The code   */
+/* must be accompanied by the FIRST BSD license file in the root directory of */
+/* the project.                                                               */
+/*----------------------------------------------------------------------------*/
+//Ps. oui il n'y a pas d'accent. Fichtre d'ASCII
+
+//Nom du projet
+package org.usfirst.frc.team6929.robot;
+
+
+//Importations de code de la librairie de first
+
+import edu.wpi.cscore.UsbCamera;
+import edu.wpi.first.networktables.NetworkTable;
+import edu.wpi.first.networktables.NetworkTableEntry;
+import edu.wpi.first.networktables.NetworkTableInstance;
+import edu.wpi.first.wpilibj.ADXRS450_Gyro;
+import edu.wpi.first.wpilibj.Joystick;
+import edu.wpi.first.wpilibj.PIDController;
+import edu.wpi.first.wpilibj.Spark;
+import edu.wpi.first.wpilibj.TimedRobot;
+import edu.wpi.first.wpilibj.Timer;
+import edu.wpi.first.wpilibj.VictorSP;
+import edu.wpi.first.wpilibj.drive.DifferentialDrive;
+import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.wpilibj.CameraServer;
+import edu.wpi.first.wpilibj.DigitalInput;
+import edu.wpi.first.wpilibj.DoubleSolenoid;
+import edu.wpi.first.wpilibj.Encoder;
+
+//-----------------Fin des importations et debut du code!--------------------------------
+
+//On annonce la classe. C'est une classe TimedRobot, 
+//ce qui signifie qu'elle va etre appelee (Utilisee toutes les 20 ms (Constant))
+
+public class Robot extends TimedRobot {
+//On annonce les differentes variables des pieces du robot
+	
+	//VictorSP leftMotor = new VictorSP(0);
+	//VictorSP rightMotor = new VictorSP(1);
+	Spark testMotor = new Spark(4);	
+//	private DifferentialDrive m_robotDrive = new DifferentialDrive(leftMotor, rightMotor);
+	private Joystick m_stick = new Joystick(0);
+	private ADXRS450_Gyro gyro = new ADXRS450_Gyro();
+	private Timer m_timer = new Timer();
+	//DigitalInput limitswitch1;
+	//DigitalInput limitswitch2;
+
+Encoder enc;
+//Chooser
+	//Ce sont les variables permettant de choisir le mode autonome avant le match
+	//Elles sont un peu speciales a cause de cela
+	
+		private static final String kDefaultAuto = "Mode default";
+		private static final String kCustomAuto1 = "Mode 1";
+		private static final String kCustomAuto2 = "Mode 2";
+		private static final String kCustomAuto3 = "Mode 3";
+		private static final String kCustomAuto4 = "Mode 4";
+		private static final String kCustomAuto5 = "Mode 5";
+		private static final String kCustomAuto6 = "Mode 6";
+		private String m_autoSelected;
+		private SendableChooser<String> m_chooser = new SendableChooser<>();
+	
+	
+//PID
+	//Les variables pour le regulateur PID (proportionnel, integral, derive)
+	
+	//Des constantes de PID qui marchent bien avec le robot
+
+        private static final double kP = -0.02;
+		private static final double kI = -0.4;
+		private static final double kD = 0;
+	
+	//Ont annonce le controlleur PID
+		private PIDController r_pidController;
+		private PIDController l_pidController;
+	
+	//Les variables du pneumatic
+//		DoubleSolenoid exampleDouble = new DoubleSolenoid(0, 7);
+	//	DoubleSolenoid pneuPince = new DoubleSolenoid(1, 6);
+	
+	//Ah ce tres cher Network Table
+	NetworkTableEntry xCenterEntry;
+	 double[] centerX;
+	
+	 
+	
+	//Variables personnalisees (Qui ne sont que des variables fictives et non pas des elements du robot)
+	
+	boolean Bbuton = false;
+	boolean Ybuton = false;
+	boolean lent = true;
+	boolean lentTrigger = false;
+	boolean YbutonTrigger = false;
+	boolean premiereMesure = false;
+	
+	
+//Fin de l'annonce des variables
+
+//-----------------------Lancement du robot------------------------------------------
+	@Override
+	public void robotInit() {
+		
+//On setup certaines pieces des le demarage
+		gyro.reset();
+		UsbCamera camera = CameraServer.getInstance().startAutomaticCapture();
+		camera.setResolution(640, 360);
+		camera.setFPS(15);
+
+		//limitswitch2 = new DigitalInput(1);
+		//limitswitch1 = new DigitalInput(0);
+
+
+		//Encoders
+
+		enc = new Encoder(0, 1, false, Encoder.EncodingType.k4X);
+		enc.setDistancePerPulse(7);
+		
+//Les trois versions du code de pneumatic qu'on peut utiliser, a se rappeler
+		//exampleDouble.set(DoubleSolenoid.Value.kOff);
+		//exampleDouble.set(DoubleSolenoid.Value.kForward);
+		//exampleDouble.set(DoubleSolenoid.Value.kReverse);
+		
+		
+//Network Tables
+	//On commence a collecter les donnes du network
+	
+		NetworkTableInstance inst = NetworkTableInstance.getDefault();
+		NetworkTable table = inst.getTable("GRIP/Contours");
+		xCenterEntry = table.getEntry("centerX");
+		
+//Selection mode auto
+	//On ajouter des options de mode autonomes
+	
+			m_chooser.addDefault("Mode default", kDefaultAuto);
+			m_chooser.addObject("Mode 1", kCustomAuto1);
+			m_chooser.addObject("Mode 2", kCustomAuto2);
+			m_chooser.addObject("Mode 3", kCustomAuto3);
+			m_chooser.addObject("Mode 4", kCustomAuto4);
+			m_chooser.addObject("Mode 5", kCustomAuto5);
+			m_chooser.addObject("Mode 6", kCustomAuto6);
+	
+	//Et on les mets sur le dashboard		
+	
+			SmartDashboard.putData(m_chooser);
+		    
+//PID
+	//On active le PID
+	
+		//r_pidController = new PIDController(kP, kI, kD, gyro, rightMotor);
+		//l_pidController = new PIDController(kP, kI, kD, gyro, leftMotor);
+
+//Fin du robot init	
+	}
+
+//-----------------------------On start le mode autonome------------------------- 
+	@Override
+	public void autonomousInit() {
+	//Ont active certains systemes
+	enc.reset();
+		m_timer.reset();
+		m_timer.start();
+		m_autoSelected = m_chooser.getSelected();
+		System.out.println("Auto selected: " + m_autoSelected);
+
+//Fin de autonomousInit
+	}
+
+
+//--------------------Mode autonome (Durant)----------------------------------
+//--------------------En chantier---------------------------------------------
+
+	@Override
+	public void autonomousPeriodic() {
+	
+	//On selectione le mode autonome choisit
+	
+		switch (m_autoSelected) {
+		case kCustomAuto1:
+			
+			 SmartDashboard.putNumber("Ok",1);
+		double distance = enc.getDistance();
+		double raw = enc.getRaw();
+			int count = enc.get();
+		double rate = enc.getRate();
+			boolean stopped = enc.getStopped();
+			
+			SmartDashboard.putNumber("Distance", distance);
+			SmartDashboard.putNumber("Count", count);
+			SmartDashboard.putNumber("Rate", rate);
+			SmartDashboard.putNumber("Raw", raw);
+			SmartDashboard.putBoolean("Stopped", stopped);
+			
+			if(count < 480 ) {
+				SmartDashboard.putString("Distance au dessus de 10", "Faux");
+				 testMotor.set(1);
+			}else {
+				SmartDashboard.putString("Distance au dessus de 10", "Vrai");
+				testMotor.set(0);
+			}
+			
+		/*	
+			if(m_timer.get() < 2) {
+				m_robotDrive.arcadeDrive(-0.6 ,0);
+				}else {
+					if(limitswitch1.get() == false || limitswitch2.get() == false) {
+						premiereMesure = false;
+							} else {
+								double[] gripValuesX = new double[0];
+								double[] XValue =  xCenterEntry.getDoubleArray(gripValuesX);
+								double angleVise = 320 / 10.333;
+				
+								double calcul = 0;
+									if(XValue.length != 0) {
+		
+										if(premiereMesure == false) {
+											double trouve =  XValue[0] / 10.333;
+											SmartDashboard.putNumber("Trouve", trouve);
+					
+											gyro.reset();
+											premiereMesure = true;  
+											
+											calcul = angleVise - trouve;
+											SmartDashboard.putNumber("Calculs", calcul);
+											}
+										if(premiereMesure == true) {
+											double angleGyro = gyro.getAngle();
+											SmartDashboard.putNumber("Angle Gyro", angleGyro);
+											double setPoint = calcul - angleGyro ;
+											SmartDashboard.putNumber("Set Point", setPoint);
+											m_robotDrive.arcadeDrive(-0.7, setPoint * 0.025);
+											}
+
+									}else {
+										m_robotDrive.arcadeDrive(0, 0.4);
+										}
+									}
+						}
+			*/
+			break;
+			
+		case kCustomAuto2:
+	/*		if(m_timer.get() < 2) {
+			//	m_robotDrive.arcadeDrive(-0.6 ,0);
+				}else {
+				//	if(limitswitch1.get() == false || limitswitch2.get() == false) {
+						premiereMesure = false;
+					//		} else {
+								double[] gripValuesX = new double[0];
+								double[] XValue =  xCenterEntry.getDoubleArray(gripValuesX);
+								double angleVise = 320 / 10.333;
+				
+								double calcul = 0;
+									if(XValue.length != 0) {
+		
+										if(premiereMesure == false) {
+											double trouve =  XValue[0] / 10.333;
+											SmartDashboard.putNumber("Trouve", trouve);
+					
+											gyro.reset();
+											premiereMesure = true;  
+											
+											calcul = angleVise - trouve;
+											SmartDashboard.putNumber("Calculs", calcul);
+											}
+										if(premiereMesure == true) {
+											double angleGyro = gyro.getAngle();
+											SmartDashboard.putNumber("Angle Gyro", angleGyro);
+											double setPoint = calcul - angleGyro ;
+											SmartDashboard.putNumber("Set Point", setPoint);
+								//			m_robotDrive.arcadeDrive(-0.7, setPoint * 0.025);
+											}
+
+									}else {
+							//			m_robotDrive.arcadeDrive(0, 0.4);
+										}
+									}
+				//		}
+		*/	break;
+			
+		case kCustomAuto3:
+		/*	if(m_timer.get() < 2) {
+			//	m_robotDrive.arcadeDrive(-0.6 ,0);
+				}else {
+		//			if(limitswitch1.get() == false || limitswitch2.get() == false) {
+						premiereMesure = false;
+				//			} else {
+								double[] gripValuesX = new double[0];
+								double[] XValue =  xCenterEntry.getDoubleArray(gripValuesX);
+								double angleVise = 320 / 10.333;
+				
+								double calcul = 0;
+									if(XValue.length != 0) {
+		
+										if(premiereMesure == false) {
+											double trouve =  XValue[0] / 10.333;
+											SmartDashboard.putNumber("Trouve", trouve);
+					
+											gyro.reset();
+											premiereMesure = true;  
+											
+											calcul = angleVise - trouve;
+											SmartDashboard.putNumber("Calculs", calcul);
+											}
+										if(premiereMesure == true) {
+											double angleGyro = gyro.getAngle();
+											SmartDashboard.putNumber("Angle Gyro", angleGyro);
+											double setPoint = calcul - angleGyro ;
+											SmartDashboard.putNumber("Set Point", setPoint);
+								//			m_robotDrive.arcadeDrive(-0.7, setPoint * 0.025);
+											}
+
+									}else {
+									//	m_robotDrive.arcadeDrive(0, 0.4);
+										}
+									}
+			//			}
+	*/		break;
+			
+		case kCustomAuto4:
+	/*		if(m_timer.get() < 2) {
+		//		m_robotDrive.arcadeDrive(-0.6 ,0);
+				}else {
+			//		if(limitswitch1.get() == false || limitswitch2.get() == false) {
+						premiereMesure = false;
+				//			} else {
+								double[] gripValuesX = new double[0];
+								double[] XValue =  xCenterEntry.getDoubleArray(gripValuesX);
+								double angleVise = 320 / 10.333;
+				
+								double calcul = 0;
+									if(XValue.length != 0) {
+		
+										if(premiereMesure == false) {
+											double trouve =  XValue[0] / 10.333;
+											SmartDashboard.putNumber("Trouve", trouve);
+					
+											gyro.reset();
+											premiereMesure = true;  
+											
+											calcul = angleVise - trouve;
+											SmartDashboard.putNumber("Calculs", calcul);
+											}
+										if(premiereMesure == true) {
+											double angleGyro = gyro.getAngle();
+											SmartDashboard.putNumber("Angle Gyro", angleGyro);
+											double setPoint = calcul - angleGyro ;
+											SmartDashboard.putNumber("Set Point", setPoint);
+							//				m_robotDrive.arcadeDrive(-0.7, setPoint * 0.025);
+											}
+
+									}else {
+						//				m_robotDrive.arcadeDrive(0, 0.4);
+										}
+									}
+			//			}
+		*/	break;
+			
+		case kCustomAuto5:
+	/*		if(m_timer.get() < 2) {
+	//			m_robotDrive.arcadeDrive(-0.6 ,0);
+				}else {
+		//			if(limitswitch1.get() == false || limitswitch2.get() == false) {
+						premiereMesure = false;
+				//			} else {
+								double[] gripValuesX = new double[0];
+								double[] XValue =  xCenterEntry.getDoubleArray(gripValuesX);
+								double angleVise = 320 / 10.333;
+				
+								double calcul = 0;
+									if(XValue.length != 0) {
+		
+										if(premiereMesure == false) {
+											double trouve =  XValue[0] / 10.333;
+											SmartDashboard.putNumber("Trouve", trouve);
+					
+											gyro.reset();
+											premiereMesure = true;  
+											
+											calcul = angleVise - trouve;
+											SmartDashboard.putNumber("Calculs", calcul);
+											}
+										if(premiereMesure == true) {
+											double angleGyro = gyro.getAngle();
+											SmartDashboard.putNumber("Angle Gyro", angleGyro);
+											double setPoint = calcul - angleGyro ;
+											SmartDashboard.putNumber("Set Point", setPoint);
+									//		m_robotDrive.arcadeDrive(-0.7, setPoint * 0.025);
+											}
+
+									}else {
+										//m_robotDrive.arcadeDrive(0, 0.4);
+										}
+									}
+			*/	//		}
+			break;
+			
+		case kCustomAuto6:
+		/*	if(m_timer.get() < 2) {
+		//		m_robotDrive.arcadeDrive(-0.6 ,0);
+			}else {
+		//			if(limitswitch1.get() == false || limitswitch2.get() == false) {
+						premiereMesure = false;
+				//			} else {
+								double[] gripValuesX = new double[0];
+								double[] XValue =  xCenterEntry.getDoubleArray(gripValuesX);
+								double angleVise = 320 / 10.333;
+				
+								double calcul = 0;
+									if(XValue.length != 0) {
+		
+										if(premiereMesure == false) {
+											double trouve =  XValue[0] / 10.333;
+											SmartDashboard.putNumber("Trouve", trouve);
+					
+											gyro.reset();
+											premiereMesure = true;  
+											
+											calcul = angleVise - trouve;
+											SmartDashboard.putNumber("Calculs", calcul);
+											}
+										if(premiereMesure == true) {
+											double angleGyro = gyro.getAngle();
+											SmartDashboard.putNumber("Angle Gyro", angleGyro);
+											double setPoint = calcul - angleGyro ;
+											SmartDashboard.putNumber("Set Point", setPoint);
+								//			m_robotDrive.arcadeDrive(-0.7, setPoint * 0.025);
+											}
+
+									}else {
+									//	m_robotDrive.arcadeDrive(0, 0.4);
+										}
+					//				}
+						}
+		*/	break;
+			
+			
+			
+		case kDefaultAuto:
+		default:
+	/*		
+			if(m_timer.get() < 2) {
+		//		m_robotDrive.arcadeDrive(-0.6 ,0);
+				}else {
+					SmartDashboard.putNumber("Non", 1);
+				//	if(limitswitch1.get() == false || limitswitch2.get() == false) {
+						premiereMesure = false;
+							} 
+								double[] gripValuesX = new double[0];
+								double[] XValue =  xCenterEntry.getDoubleArray(gripValuesX);
+								double angleVise = 320 / 10.333;
+				
+								double calcul = 0;
+									if(XValue.length != 0) {
+		
+										if(premiereMesure == false) {
+											double trouve =  XValue[0] / 10.333;
+											SmartDashboard.putNumber("Trouve", trouve);
+					
+											gyro.reset();
+											premiereMesure = true;  
+											
+											calcul = angleVise - trouve;
+											SmartDashboard.putNumber("Calculs", calcul);
+											}
+										if(premiereMesure == true) {
+											double angleGyro = gyro.getAngle();
+											SmartDashboard.putNumber("Angle Gyro", angleGyro);
+											double setPoint = calcul - angleGyro ;
+											SmartDashboard.putNumber("Set Point", setPoint);
+									//		m_robotDrive.arcadeDrive(-0.7, setPoint * 0.025);
+											}
+
+									}else {
+										//m_robotDrive.arcadeDrive(0, 0.4);
+										}
+									//}
+		*/				
+			break;
+	}}
+		
+			
+
+				 			  
+			
+			
+//Fin du mode autonome 
+	//	}
+		
+
+//--------------------------Initialisation du mode teleopere--------------------------------
+	@Override
+	public void teleopInit() {
+
+	//On active nos trucs
+		
+		r_pidController.enable();
+		r_pidController.setSetpoint(-53);
+		l_pidController.enable();
+		l_pidController.setSetpoint(-53);
+
+//Fin de teleopInit
+	}
+
+//----------------------------Deroulement du mode Teleop------------------------------------
+	@Override
+	public void teleopPeriodic() {
+
+//Network Tables
+	//C'est la qu'on va mettre nos Network Tables, si besoin est	
+		 testMotor.set(1);
+		
+		
+		
+//------------------------------------------Conduite-------------------------
+		
+		
+	//ici, on verifie si les boutons B et Y ne sont pas actionnes
+		if(Bbuton == false && YbutonTrigger == false) {
+		
+		//Desactivation du pid
+			r_pidController.disable();
+			l_pidController.disable();
+		
+		//Creation de l'effet de toggle 
+			if(m_stick.getRawButton(9) == true  && lentTrigger == false) {
+				lent = !lent;
+				lentTrigger = true;
+				}
+			
+		//Eviter d'appuyer 3000 fois sur le bouton en meme temps
+			if(m_stick.getRawButton(9) == false) {
+				lentTrigger = false;
+				}
+		//Mode lent	
+			if (lent == false){
+				double ystick = m_stick.getRawAxis(2) *0.6 - m_stick.getRawAxis(3) * 0.6;
+				double xstick = - m_stick.getRawAxis(0) * 0.6;
+	//			m_robotDrive.arcadeDrive(ystick, xstick);
+				}
+		//Mode rapide
+			else if (lent == true) {
+				double ystick = m_stick.getRawAxis(2) * 2 - m_stick.getRawAxis(3);
+				double xstick = - m_stick.getRawAxis(0) * 0.75;
+		//		m_robotDrive.arcadeDrive(ystick, xstick);
+				}
+			}
+		
+		
+		double angle = gyro.getAngle();
+		double angleabs = angle;
+		
+		boolean reset = m_stick.getRawButton(1);
+		
+		//----------------Calcul d'angle---------------------
+		// De infinie vers -360 a 360
+		if(angleabs > 0) {
+			double a = angleabs / 360;
+			int b = (int)a;
+			double c = angleabs - (b * 360);
+			if(c > 180) {
+				c -= 360;
+			}
+			else if(c <= 180) {
+				
+			}
+			angleabs = c;
+		}
+		else if(angleabs < 0) {
+			double a = angleabs / 360;
+			int b = (int)a;
+			double c = angleabs - (b * 360);
+			if(c < -180) {
+				c += 360;
+			}
+			else if(c >= -180) {}
+			angleabs = c;
+		}
+		else {}
+		
+		SmartDashboard.putNumber("Gyro angle", angle);
+		SmartDashboard.putNumber("Gyro angle (ABS)", angleabs);
+		
+		//-----------Fin du calcul d'angle---------------
+		
+		
+		//----------------A Button------------------------
+		if(reset == true){
+			gyro.reset();
+			r_pidController.setSetpoint(-53);
+			l_pidController.setSetpoint(-53);
+		//	pneuPince.set(DoubleSolenoid.Value.kReverse);	
+			}		
+			
+
+		//----------------------------B buton-----------------------------------
+		//Garder B button enfonce pour qu'il finisse
+		
+		if(m_stick.getRawButton(2) == true && Bbuton == false) {
+		//Activation du PID	
+			r_pidController.enable();
+			l_pidController.enable();
+			double obj = angle + 127.5;
+			r_pidController.setSetpoint(obj);
+			l_pidController.setSetpoint(obj);
+			Bbuton = true;
+			SmartDashboard.putNumber("PID objectif", obj);
+		//	pneuPince.set(DoubleSolenoid.Value.kForward);
+			}
+		
+	//Eviter 3000 fois le meme bouton. S'active quan on lache le bouton
+		if(m_stick.getRawButton(2) == false) {
+			Bbuton = false;
+			}
+			
+		//-----------------------Ybuton----------------------------
+	//Si ont touche au button Y
+		if(m_stick.getRawButton(4) == true && Ybuton == false){
+			Ybuton = true;
+			
+		//Si toggle pas active
+			if(YbutonTrigger == false){
+				gyro.reset();
+		//		exampleDouble.set(DoubleSolenoid.Value.kForward);
+				
+				} else {
+					r_pidController.disable();
+					l_pidController.disable();
+		//			exampleDouble.set(DoubleSolenoid.Value.kReverse);
+					}
+		//La raison pourquoi il toggle		
+			YbutonTrigger = !YbutonTrigger;
+			}
+		//Quand on lache le bouton
+			if(m_stick.getRawButton(4) == false) {
+				Ybuton = false;
+			}
+	
+		//Si toggle == oui
+			if(YbutonTrigger == true) {
+			
+			//Setup le "PID" pour rester droit
+				double turningValue = gyro.getAngle() * 0.95;
+				SmartDashboard.putNumber("Turning Value", turningValue);
+	//			m_robotDrive.arcadeDrive(-0.65, turningValue);
+				}
+	
+//Fin du teleop	
+	}
+	
+	@Override
+	public void testPeriodic() {
+	}
+}
