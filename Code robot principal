@@ -173,12 +173,12 @@ Encoder enc;
 	@Override
 	public void autonomousInit() {
 	//Ont active certains systemes
-	enc.reset();
+		enc.reset();
 		limit_timer.reset();
 		limit_timer.start();
 		PID_timer.reset();
-		r_pidController.enable();
-		l_pidController.enable();
+		r_pidController.disable();
+		l_pidController.disable();
 		m_autoSelected = m_chooser.getSelected();
 		System.out.println("Auto selected: " + m_autoSelected);
 		auto1 = false;
@@ -223,29 +223,30 @@ Encoder enc;
 			SmartDashboard.putNumber("Distance Z",distanceZ);
 //Fin encoder
 			
-			if(roue  > 3.49 || limit_timer.get() < 1) {
+			if(roue  > 3.49) {
 				
 				double turningValue = ahrs.getAngle() * 0.1;
 				SmartDashboard.putNumber("Turning Value", turningValue);
-				m_robotDrive.arcadeDrive(0.8, 0);
+				m_robotDrive.arcadeDrive(0.8, turningValue);
 				
-			}else if (PID_timer.get() < 2){
-				PID_timer.start();
-				r_pidController.setSetpoint(-48);
-				l_pidController.setSetpoint(-48);
-				ahrs.resetDisplacement();
-				ahrs.reset();
-			}else if (PID_timer.get() > 4 && roue > 4.244 || PID_timer.get() > 4 && limit_timer.get() < 5) {
+			}else if (PID_timer.get() < 4){
 				if(auto1 == false) {
 					enc.reset();
+					r_pidController.disable();
+					l_pidController.disable();
 					auto1 = true;
+				}
+			}else if (PID_timer.get() > 4 && roue > 4.244 ) {
+				if(auto2 == false) {
+					enc.reset();
+					auto2 = true;
 				}
 				
 				double turningValue = ahrs.getAngle() * 0.75;
 				SmartDashboard.putNumber("Turning Value", turningValue);
-				m_robotDrive.arcadeDrive(-0.6, 0);
+				m_robotDrive.arcadeDrive(-0.6, turningValue);
 				
-			}else if (roue > 4.244 || auto2 == true || limit_timer.get() > 8 ){
+			}else if (roue > 4.244 || auto2 == true){
 				if(limitswitch1.get() == true || limitswitch2.get() == true) {
 					auto2 = true;
 					double[] gripValuesX = new double[0];
