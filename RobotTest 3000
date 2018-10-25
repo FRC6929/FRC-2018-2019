@@ -230,13 +230,14 @@ Encoder enc;
 				m_robotDrive.arcadeDrive(0.8, turningValue);
 				
 			}else if (limit_timer.get() < 4){
-				r_pidController.enable();
-				l_pidController.enable();
-				r_pidController.setSetpoint(-90);
-				l_pidController.setSetpoint(-90);
+
 		if(auto1 == false) {
 			ahrs.reset();
 			auto1 = true;
+			r_pidController.enable();
+			l_pidController.enable();
+			r_pidController.setSetpoint(-90);
+			l_pidController.setSetpoint(-90);
 		}
 			
 			}else if (limit_timer.get() < 7) {
