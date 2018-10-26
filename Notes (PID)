@@ -1,0 +1,9 @@
+PID: 
+
+Il existe une fonction kF (Feed forward) qui permet de faire avancer le robot en même temps que le faire PID
+
+PD pour drive straight
+PI pour tourner
+
+setInputRange (-180 à 180) + setContinuous = Magie, ça marche maintenant avec le navX
+setOutputRange (-1 à 1)
