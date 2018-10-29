@@ -7,3 +7,16 @@ PI pour tourner
 
 setInputRange (-180 à 180) + setContinuous = Magie, ça marche maintenant avec le navX
 setOutputRange (-1 à 1)
+
+
+Faire if(objectif > 0.2){
+objectif = 0.2
+}
+
+et 
+
+if(objectif < -0.2){
+objectif = -0.2
+}
+
+
