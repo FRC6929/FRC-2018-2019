@@ -44,17 +44,21 @@ public class Robot extends TimedRobot {
 	
 	VictorSP leftMotor = new VictorSP(0);
 	VictorSP rightMotor = new VictorSP(1);
-	Spark testMotor = new Spark(4);	
+	Spark MPR1 = new Spark(2);
+	Spark MPC1 = new Spark(3);
+	Spark MPC2 = new Spark(4);
+	Spark MPelle1 = new Spark(5);
 	private DifferentialDrive m_robotDrive = new DifferentialDrive(leftMotor, rightMotor);
 	private Joystick m_stick = new Joystick(0);
 	//private ADXRS450_Gyro gyro = new ADXRS450_Gyro();
 	private Timer limit_timer = new Timer();
+	private Timer yButtonTimer = new Timer();
 	private Timer PID_timer = new Timer();
+	private Timer retourTimer = new Timer();
 	 AHRS ahrs;
-     DigitalInput limitswitch1;
-	DigitalInput limitswitch2;
+     DigitalInput limitswitchPince;
 
-Encoder enc;
+Encoder enc1;
 //Chooser
 	//Ce sont les variables permettant de choisir le mode autonome avant le match
 	//Elles sont un peu speciales a cause de cela
@@ -75,15 +79,15 @@ Encoder enc;
 	
 	//Des constantes de PID qui marchent bien avec le robot
 
-        private static final double kP = 0.02;
-		private static final double kI = 0.4;
-		private static final double kD = 0;
-	
+        private static final double kP = -0.04; // -0.035
+		private static final double kI = 0;    
+		private static final double kD = -0.065; //-0.065
+		
 	//Ont annonce le controlleur PID
 		private PIDController r_pidController;
 		private PIDController l_pidController;
-		private PIDController encL_pidController;
-		private PIDController encR_pidController;
+		
+		private PIDController encPince_pidController;
 	//Les variables du pneumatic
 //		DoubleSolenoid exampleDouble = new DoubleSolenoid(0, 7);
 	//	DoubleSolenoid pneuPince = new DoubleSolenoid(1, 6);
@@ -105,7 +109,13 @@ Encoder enc;
 	boolean auto1 = false;
 	boolean auto2 = false;
 	boolean auto3 = false;
+	boolean auto4 = false;
+	boolean auto5 = false;
+	boolean auto6 = false;
+	boolean auto7 = false;
 	double objRetour = 0;
+	double objectifStraight = 0;
+	boolean yButonAngle = false;
 //Fin de l'annonce des variables
 
 //-----------------------Lancement du robot------------------------------------------
@@ -122,14 +132,13 @@ Encoder enc;
 		//camera.setResolution(640, 360);
 		//camera.setFPS(15);
 
-		limitswitch2 = new DigitalInput(2);
-		limitswitch1 = new DigitalInput(3);
+		limitswitchPince = new DigitalInput(2);
 
 
 		//Encoders
-
-		enc = new Encoder(0, 1, false, Encoder.EncodingType.k4X);
-		enc.setDistancePerPulse(7);
+//Enc 1 = encoder de la pince
+		enc1 = new Encoder(0, 1, false, Encoder.EncodingType.k1X);
+	//	enc1.setDistancePerPulse(360/497);
 		
 //Les trois versions du code de pneumatic qu'on peut utiliser, a se rappeler
 		//exampleDouble.set(DoubleSolenoid.Value.kOff);
@@ -162,10 +171,18 @@ Encoder enc;
 //PID
 	//On active le PID
 	
-		r_pidController = new PIDController(kP, kI, kD, ahrs, rightMotor);
-		l_pidController = new PIDController(kP, kI, kD, ahrs, leftMotor);
-		encL_pidController = new PIDController(kP, kI, kD, enc, leftMotor);
-		encR_pidController = new PIDController(kP, kI, kD, enc, rightMotor);
+		r_pidController = new PIDController(kP, kI, kD,  ahrs, leftMotor);
+		l_pidController = new PIDController(kP, kI, kD, ahrs, rightMotor);
+	
+		r_pidController.setInputRange(-180, 180);
+		l_pidController.setInputRange(-180, 180);
+		r_pidController.setContinuous();
+		l_pidController.setContinuous();
+		
+		
+		
+		 encPince_pidController = new PIDController(0.175, 0 , 0 , enc1, MPR1);
+
 //Fin du robot init	
 	}
 
@@ -173,16 +190,28 @@ Encoder enc;
 	@Override
 	public void autonomousInit() {
 	//Ont active certains systemes
-	enc.reset();
+		enc1.reset();
+		
 		limit_timer.reset();
-		limit_timer.start();
+		retourTimer.reset();
 		PID_timer.reset();
+		
+		limit_timer.start();
+		
 		r_pidController.disable();
 		l_pidController.disable();
+		
 		m_autoSelected = m_chooser.getSelected();
 		System.out.println("Auto selected: " + m_autoSelected);
+		
 		auto1 = false;
 		auto2 = false;
+		auto3 = false;
+		auto4 = false;
+		auto5 = false;
+		auto6 = false;
+		auto7 = false;
+		
 		ahrs.reset();
 		ahrs.resetDisplacement();
 //Fin de autonomousInit
@@ -201,91 +230,210 @@ Encoder enc;
 		case kCustomAuto1:
 			 SmartDashboard.putNumber("Ok",1);
 			 
-//Encoders
-		double distance = enc.getDistance();
-		double raw = enc.getRaw();
-			int count = enc.get();
-		double rate = enc.getRate();
-			boolean stopped = enc.getStopped();
+//--------------------------Variables auto 1-----------------------------------
+			 
+			int count = enc1.get();
 			double roue = count/480;
-			
-			SmartDashboard.putNumber("Distance", distance);
-			SmartDashboard.putNumber("Count", count);
-			SmartDashboard.putNumber("Rate", rate);
-			SmartDashboard.putNumber("Raw", raw);
-			SmartDashboard.putBoolean("Stopped", stopped);
+	
 			//480 = un tour
-			double distanceX = ahrs.getDisplacementX();
-			double distanceY = ahrs.getDisplacementY();
-			double distanceZ = ahrs.getDisplacementZ();
-			SmartDashboard.putNumber("Distance X",distanceX);
-			SmartDashboard.putNumber("Distance Y",distanceY);
-			SmartDashboard.putNumber("Distance Z",distanceZ);
-//Fin encoder
 			
-			if(limit_timer.get() < 1) {
+			
+//----------------------Debut mode autonome 1--------------------------
+			
+			if(limit_timer.get() < 2) {
 				
-				double turningValue = ahrs.getAngle() * 0.1;
+				double turningValue = -ahrs.getAngle();
 				SmartDashboard.putNumber("Turning Value", turningValue);
-				m_robotDrive.arcadeDrive(0.8, turningValue);
+
+				if(turningValue > 0.3) {
+					turningValue = 0.3;
+				}
+				
+				if (turningValue < -0.3) {
+					turningValue = -0.3;
+				}
+
+				m_robotDrive.arcadeDrive(0.7, -turningValue * 0.7);
 				
 			}else if (limit_timer.get() < 4){
 
-		if(auto1 == false) {
-			ahrs.reset();
-			auto1 = true;
-			r_pidController.enable();
-			l_pidController.enable();
-			r_pidController.setSetpoint(-90);
-			l_pidController.setSetpoint(-90);
-		}
-			
-			}else if (limit_timer.get() < 7) {
 				if(auto1 == false) {
-					enc.reset();
+					ahrs.reset();
+					auto1 = true;
+		
+					r_pidController.enable();
+					l_pidController.enable();
+					r_pidController.setSetpoint(52);
+					l_pidController.setSetpoint(52);
+				}
+			
+			}else if (limit_timer.get() < 6) {
+				if(auto2 == false) {;
+					ahrs.reset();
 					
 					r_pidController.disable();
 					l_pidController.disable();
-					auto1 = true;
+					
+					auto2 = true;
 				}
 				
-				double turningValue = ahrs.getAngle() * 0.75;
+				double turningValue = -ahrs.getAngle() ;
 				SmartDashboard.putNumber("Turning Value", turningValue);
-				m_robotDrive.arcadeDrive(-0.6, turningValue);
 				
-			}else if (limit_timer.get() > 8 ){
-				if(limitswitch1.get() == true || limitswitch2.get() == true) {
-					auto2 = true;
+				if(turningValue > 0.5) {
+					turningValue = 0.5;
+				}
+				if (turningValue < -0.5) {
+					turningValue = -0.5;
+				}
+				
+				m_robotDrive.arcadeDrive(0.5, -turningValue * 0.7);
+				
+			}else if (limit_timer.get() < 8){
+				if(auto5 == false) {
+					ahrs.reset();
+					auto5 = true;
+		
+					r_pidController.enable();
+					l_pidController.enable();
+					r_pidController.setSetpoint(-90);
+					l_pidController.setSetpoint(-90);
+				}
+				
+			}else if (limit_timer.get() < 10){
+				if(auto6 == false) {
+					ahrs.reset();
+					
+					r_pidController.disable();
+					l_pidController.disable();
+					
+					encPince_pidController.enable();
+					encPince_pidController.setSetpoint(124);
+					
+					auto6 = true;
+				}
+				
+				double turningValue = -ahrs.getAngle() ;
+				SmartDashboard.putNumber("Turning Value", turningValue);
+				
+				if(turningValue > 0.5) {
+					turningValue = 0.5;
+				}
+				if (turningValue < -0.5) {
+					turningValue = -0.5;
+				}
+			
+				m_robotDrive.arcadeDrive(0.5, -turningValue * 0.7);
+				
+			}else if (limit_timer.get() > 14 ){
+				
+				if(limitswitchPince.get() == true) {
+					
 					double[] gripValuesX = new double[0];
 					double[] XValue =  xCenterEntry.getDoubleArray(gripValuesX);
 					double angleVise = 320 / 10.333;
 	
 					double calcul = 0;
-						if(XValue.length != 0) {
+					
+					if(XValue.length != 0) {
 
 							if(premiereMesure == false) {
 								double trouve =  XValue[0] / 10.333;
 								SmartDashboard.putNumber("Trouve", trouve);
-		
+								
+								MPC1.set(0.35);
+								MPC2.set(-0.35);
+								
 								ahrs.reset();
 								premiereMesure = true;  
 								
 								calcul = angleVise - trouve;
 								SmartDashboard.putNumber("Calculs", calcul);
-								}
+							}
+							
 							if(premiereMesure == true) {
-							double angleGyro = ahrs.getAngle();
+								double angleGyro = ahrs.getAngle();
 								SmartDashboard.putNumber("Angle Gyro", angleGyro);
 								double setPoint = calcul - angleGyro ;
 								SmartDashboard.putNumber("Set Point", setPoint);
-								m_robotDrive.arcadeDrive(-0.7, setPoint * 0.025);
-								}
-
-						}else {
-							m_robotDrive.arcadeDrive(0, 0.4);
+								m_robotDrive.arcadeDrive(0.7, setPoint * 0.025);
 							}
+
+					}else {
+						m_robotDrive.arcadeDrive(0, 0.4);
+					}
 						
-			}}
+				}else if( retourTimer.get() < 3) { //Nombre encoder (
+	 			if(auto3 == false)
+	 			{
+	 				MPC1.set(0);
+	 				MPC2.set(0);
+	 				retourTimer.start();
+	 			}
+	 			
+	 			double turningValue = -ahrs.getAngle();
+				
+				if(turningValue > 0.3) {
+					turningValue = 0.3;
+				}
+				if (turningValue < -0.3) {
+					turningValue = -0.3;
+				}
+	 			
+				m_robotDrive.arcadeDrive(-0.7, turningValue * 0.2);
+	 			
+				} else if (retourTimer.get() < 5) {
+					
+					if(auto7 == false) {
+						ahrs.reset();
+						auto7 = true;
+			
+						r_pidController.enable();
+						l_pidController.enable();
+						r_pidController.setSetpoint(-90);
+						l_pidController.setSetpoint(-90);
+					}
+				
+	 		} else if (retourTimer.get() < 7) {
+				double turningValue = -ahrs.getAngle();
+				SmartDashboard.putNumber("Turning Value", turningValue);
+				
+				if(turningValue > 0.3) {
+					turningValue = 0.3;
+				}
+				if (turningValue < -0.3) {
+					turningValue = -0.3;
+				}
+				m_robotDrive.arcadeDrive(-0.7, turningValue);
+				
+	 		} else if (retourTimer.get() < 7) {
+	 			if(auto1 == false) {
+	 				ahrs.reset();
+	 				auto1 = true;
+	 				r_pidController.enable();
+	 				l_pidController.enable();
+	 				r_pidController.setSetpoint(-52);
+	 				l_pidController.setSetpoint(-52);
+	 			}
+	 		} else if (retourTimer.get() < 10) {
+				double turningValue = -ahrs.getAngle() ;
+				SmartDashboard.putNumber("Turning Value", turningValue);
+				
+				if(turningValue > 0.5) {
+					turningValue = 0.5;
+				}
+				if (turningValue < -0.5) {
+					turningValue = -0.5;
+				}
+				m_robotDrive.arcadeDrive(0.5, turningValue);
+	 		} else if (retourTimer.get() > 12) {
+				MPC1.set(-0.75);
+				MPC2.set(0.75);
+	 		}
+			
+	}
+			
+		
 			
 			break;
 			
@@ -313,18 +461,7 @@ Encoder enc;
 			
 		case kDefaultAuto:
 		default:
-				double Angle = ahrs.getAngle();
-				double Altitude = ahrs.getAltitude();
-				double Pression = ahrs.getBarometricPressure();
-				double Compas = ahrs.getCompassHeading();
-				double VitesseX = ahrs.getVelocityX();
-				double VitesseY = ahrs.getVelocityY();
-				SmartDashboard.putNumber("Pression navX", Pression);
-				SmartDashboard.putNumber("Angle navX", Angle);
-				SmartDashboard.putNumber("Altitude navX", Altitude);
-				SmartDashboard.putNumber("Compas navX", Compas);
-				SmartDashboard.putNumber("VitesseX navX", VitesseX);
-				SmartDashboard.putNumber("VitesseY navX", VitesseY);
+
 			break;
 	}}
 		
@@ -342,11 +479,18 @@ Encoder enc;
 	public void teleopInit() {
 
 	//On active nos trucs
+		enc1.reset();
+		limit_timer.reset();
+		limit_timer.start();
 		
 		r_pidController.enable();
 		r_pidController.setSetpoint(0);
 		l_pidController.enable();
 		l_pidController.setSetpoint(0);
+		
+		encPince_pidController.enable();
+		encPince_pidController.setSetpoint(124);
+		
 
 //Fin de teleopInit
 	}
@@ -357,10 +501,34 @@ Encoder enc;
 
 //Network Tables
 	//C'est la qu'on va mettre nos Network Tables, si besoin est	
-		 testMotor.set(1);
+
 		
+	//Activer les roulettes de la pince(R1 et L1)
 		
+		if(m_stick.getRawButton(5) == true) {
+			MPC1.set(-0.75);
+			MPC2.set(0.75);
+		} else if(limitswitchPince.get() == true && m_stick.getRawButton(6) == true)	{
+		 
+			MPC1.set(0.35);
+			MPC2.set(-0.35);
+	 
+		}else {
+			MPC1.set(0);
+			MPC2.set(0);
+		}
 		
+		//Deployer/controller la pince
+			if(m_stick.getRawButton(7) == true) {
+				encPince_pidController.disable();
+				MPR1.set(0.4);
+			}else if (m_stick.getRawButton(8)) {
+				encPince_pidController.disable();
+				MPR1.set(-0.4);
+			} else if (limit_timer.get() >= 1.5){
+				MPR1.set(0);
+			}
+			
 //------------------------------------------Conduite-------------------------
 		
 		
@@ -381,21 +549,24 @@ Encoder enc;
 			if(m_stick.getRawButton(9) == false) {
 				lentTrigger = false;
 				}
+			
 		//Mode lent	
 			if (lent == false){
 				double ystick = m_stick.getRawAxis(2) *0.6 - m_stick.getRawAxis(3) * 0.6;
 				double xstick = - m_stick.getRawAxis(0) * 0.6;
 				m_robotDrive.arcadeDrive(-ystick, xstick);
 				}
+			
 		//Mode rapide
 			else if (lent == true) {
 				double ystick = m_stick.getRawAxis(2) * 2 - m_stick.getRawAxis(3);
 				double xstick = - m_stick.getRawAxis(0) * 0.75;
 				m_robotDrive.arcadeDrive(-ystick, xstick);
 				}
+			
 			}
 		
-		
+		//Les gyros
 		double angle = ahrs.getAngle();
 		double angleabs = angle;
 		
@@ -436,8 +607,8 @@ Encoder enc;
 		//----------------A Button------------------------
 		if(reset == true){
 			ahrs.reset();
-			r_pidController.setSetpoint(-53);
-			l_pidController.setSetpoint(-53);
+			r_pidController.setSetpoint(0);
+			l_pidController.setSetpoint(0);
 		//	pneuPince.set(DoubleSolenoid.Value.kReverse);	
 			}		
 			
@@ -447,9 +618,13 @@ Encoder enc;
 		
 		if(m_stick.getRawButton(2) == true && Bbuton == false) {
 		//Activation du PID	
+			double gyroRaw = ahrs.getRawGyroX();
+			ahrs.reset();
+			
+			SmartDashboard.putNumber("Raw Gyro", gyroRaw);
 			r_pidController.enable();
 			l_pidController.enable();
-			double obj = -angle - 30;
+			double obj = angle +180;
 			r_pidController.setSetpoint(obj);
 			l_pidController.setSetpoint(obj);
 			Bbuton = true;
@@ -467,14 +642,21 @@ Encoder enc;
 		if(m_stick.getRawButton(4) == true && Ybuton == false){
 			Ybuton = true;
 			
+			
 		//Si toggle pas active
 			if(YbutonTrigger == false){
-			ahrs.reset();
+				yButtonTimer.reset();
+				yButtonTimer.start();
+				
+		//	ahrs.reset();
 		//		exampleDouble.set(DoubleSolenoid.Value.kForward);
 				
 				} else {
+					yButtonTimer.stop();
+					yButtonTimer.reset();
 					r_pidController.disable();
 					l_pidController.disable();
+					
 		//			exampleDouble.set(DoubleSolenoid.Value.kReverse);
 					}
 		//La raison pourquoi il toggle		
@@ -486,12 +668,22 @@ Encoder enc;
 			}
 	
 		//Si toggle == oui
-			if(YbutonTrigger == true) {
-			
+			if(YbutonTrigger == true && yButtonTimer.get() >= 1) {
+			if(yButonAngle == false) {
+				objectifStraight = ahrs.getAngle();
+				yButonAngle = true;
+			}
 			//Setup le "PID" pour rester droit
-			double turningValue = ahrs.getAngle() * 0.2;
+			double turningValue = -ahrs.getAngle() + objectifStraight  ;
 			SmartDashboard.putNumber("Turning Value", turningValue);
-			m_robotDrive.arcadeDrive(-0.65, turningValue);
+			
+			if(turningValue > 0.3) {
+				turningValue = 0.3;
+			}
+			if (turningValue < -0.3) {
+				turningValue = -0.3;
+			}
+			m_robotDrive.arcadeDrive(0.65, -turningValue * 0.7);
 				}
 	
 //Fin du teleop	
