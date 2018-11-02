@@ -58,7 +58,10 @@ public class Robot extends TimedRobot {
 	 AHRS ahrs;
      DigitalInput limitswitchPince;
 
-Encoder enc1;
+Encoder encGauche;
+Encoder encDroit;
+Encoder encPelle;
+Encoder encPince;
 //Chooser
 	//Ce sont les variables permettant de choisir le mode autonome avant le match
 	//Elles sont un peu speciales a cause de cela
@@ -86,12 +89,14 @@ Encoder enc1;
 	//Ont annonce le controlleur PID
 		private PIDController r_pidController;
 		private PIDController l_pidController;
-		
+	    private PIDController encPelle_pidController;
 		private PIDController encPince_pidController;
 	//Les variables du pneumatic
 //		DoubleSolenoid exampleDouble = new DoubleSolenoid(0, 7);
 	//	DoubleSolenoid pneuPince = new DoubleSolenoid(1, 6);
-	
+//		DoubleSolenoid pneuPelleR = new DoubleSolenoid(0, 7);
+	//	DoubleSolenoid pneuPelleL = new DoubleSolenoid(1, 6);
+		
 	//Ah ce tres cher Network Table
 	NetworkTableEntry xCenterEntry;
 	 double[] centerX;
@@ -116,6 +121,7 @@ Encoder enc1;
 	double objRetour = 0;
 	double objectifStraight = 0;
 	boolean yButonAngle = false;
+	int rotationPelle=1;
 //Fin de l'annonce des variables
 
 //-----------------------Lancement du robot------------------------------------------
@@ -132,12 +138,15 @@ Encoder enc1;
 		//camera.setResolution(640, 360);
 		//camera.setFPS(15);
 
-		limitswitchPince = new DigitalInput(2);
+		limitswitchPince = new DigitalInput(8);
 
 
 		//Encoders
 //Enc 1 = encoder de la pince
-		enc1 = new Encoder(0, 1, false, Encoder.EncodingType.k1X);
+		encDroit = new Encoder(0, 1, false, Encoder.EncodingType.k1X);
+		encGauche = new Encoder (2,3, false, Encoder.EncodingType.k1X);
+		encPelle = new Encoder(4,5,false, Encoder.EncodingType.k1X);
+		encPince = new Encoder(6,7,false, Encoder.EncodingType.k1X);
 	//	enc1.setDistancePerPulse(360/497);
 		
 //Les trois versions du code de pneumatic qu'on peut utiliser, a se rappeler
@@ -173,15 +182,17 @@ Encoder enc1;
 	
 		r_pidController = new PIDController(kP, kI, kD,  ahrs, leftMotor);
 		l_pidController = new PIDController(kP, kI, kD, ahrs, rightMotor);
-	
+		
+		
+		
 		r_pidController.setInputRange(-180, 180);
 		l_pidController.setInputRange(-180, 180);
 		r_pidController.setContinuous();
 		l_pidController.setContinuous();
 		
 		
-		
-		 encPince_pidController = new PIDController(0.175, 0 , 0 , enc1, MPR1);
+		encPelle_pidController = new PIDController(0 , 0 , 0 , encPelle, MPelle1);
+		 encPince_pidController = new PIDController(0.175, 0 , 0 , encPince, MPR1);
 
 //Fin du robot init	
 	}
@@ -190,7 +201,10 @@ Encoder enc1;
 	@Override
 	public void autonomousInit() {
 	//Ont active certains systemes
-		enc1.reset();
+		encPince.reset();
+		encPelle.reset();
+		encGauche.reset();
+		encDroit.reset();
 		
 		limit_timer.reset();
 		retourTimer.reset();
@@ -232,9 +246,8 @@ Encoder enc1;
 			 
 //--------------------------Variables auto 1-----------------------------------
 			 
-			int count = enc1.get();
-			double roue = count/480;
-	
+					int count = encGauche.get();
+					double roue = count/480;
 			//480 = un tour
 			
 			
@@ -479,7 +492,7 @@ Encoder enc1;
 	public void teleopInit() {
 
 	//On active nos trucs
-		enc1.reset();
+		encGauche.reset();
 		limit_timer.reset();
 		limit_timer.start();
 		
@@ -502,13 +515,37 @@ Encoder enc1;
 //Network Tables
 	//C'est la qu'on va mettre nos Network Tables, si besoin est	
 
+		if(m_stick.getRawButton(3)==true&&rotationPelle==1) {
+			encPelle_pidController.enable();
+			encPelle_pidController.setSetpoint(45);
+			rotationPelle=rotationPelle + 1;
+			}
+			else if(m_stick.getRawButton(3)==true&&rotationPelle==2) {
+			encPelle_pidController.enable();
+			encPelle_pidController.setSetpoint(90);
+		//	pneuPelleR.set(DoubleSolenoid.Value.kForward);
+		//	pneuPelleL.set(DoubleSolenoid.Value.kForward);
+			rotationPelle=rotationPelle + 1;
+			}
+			else if(m_stick.getRawButton(3)==true&&rotationPelle==3) {
+			encPelle_pidController.enable();
+			encPelle_pidController.setSetpoint(45);	
+		//	pneuPelleR.set(DoubleSolenoid.Value.kReverse);
+		//	pneuPelleL.set(DoubleSolenoid.Value.kReverse);
+			rotationPelle=rotationPelle + 1;
+			}
+			else if(m_stick.getRawButton(3)==true&&rotationPelle==4) {
+			encPelle_pidController.enable();
+			encPelle_pidController.setSetpoint(0);			
+			rotationPelle=1;
+			}
 		
 	//Activer les roulettes de la pince(R1 et L1)
 		
-		if(m_stick.getRawButton(5) == true) {
+		if(m_stick.getRawButtonPressed(5) == true) {
 			MPC1.set(-0.75);
 			MPC2.set(0.75);
-		} else if(limitswitchPince.get() == true && m_stick.getRawButton(6) == true)	{
+		} else if(limitswitchPince.get() == true && m_stick.getRawButtonPressed(6) == true)	{
 		 
 			MPC1.set(0.35);
 			MPC2.set(-0.35);
@@ -519,10 +556,10 @@ Encoder enc1;
 		}
 		
 		//Deployer/controller la pince
-			if(m_stick.getRawButton(7) == true) {
+			if(m_stick.getRawButtonPressed(7) == true) {
 				encPince_pidController.disable();
 				MPR1.set(0.4);
-			}else if (m_stick.getRawButton(8)) {
+			}else if (m_stick.getRawButtonPressed(8)) {
 				encPince_pidController.disable();
 				MPR1.set(-0.4);
 			} else if (limit_timer.get() >= 1.5){
@@ -540,15 +577,10 @@ Encoder enc1;
 			l_pidController.disable();
 		
 		//Creation de l'effet de toggle 
-			if(m_stick.getRawButton(9) == true  && lentTrigger == false) {
+			if(m_stick.getRawButtonPressed(9) == true) {
 				lent = !lent;
-				lentTrigger = true;
 				}
 			
-		//Eviter d'appuyer 3000 fois sur le bouton en meme temps
-			if(m_stick.getRawButton(9) == false) {
-				lentTrigger = false;
-				}
 			
 		//Mode lent	
 			if (lent == false){
@@ -570,7 +602,6 @@ Encoder enc1;
 		double angle = ahrs.getAngle();
 		double angleabs = angle;
 		
-		boolean reset = m_stick.getRawButton(1);
 		
 		//----------------Calcul d'angle---------------------
 		// De infinie vers -360 a 360
@@ -605,7 +636,7 @@ Encoder enc1;
 		
 		
 		//----------------A Button------------------------
-		if(reset == true){
+		if( m_stick.getRawButtonPressed(1) == true){
 			ahrs.reset();
 			r_pidController.setSetpoint(0);
 			l_pidController.setSetpoint(0);
@@ -648,9 +679,6 @@ Encoder enc1;
 				yButtonTimer.reset();
 				yButtonTimer.start();
 				
-		//	ahrs.reset();
-		//		exampleDouble.set(DoubleSolenoid.Value.kForward);
-				
 				} else {
 					yButtonTimer.stop();
 					yButtonTimer.reset();
@@ -677,11 +705,11 @@ Encoder enc1;
 			double turningValue = -ahrs.getAngle() + objectifStraight  ;
 			SmartDashboard.putNumber("Turning Value", turningValue);
 			
-			if(turningValue > 0.3) {
-				turningValue = 0.3;
+			if(turningValue > 0.6) {
+				turningValue = 0.6;
 			}
-			if (turningValue < -0.3) {
-				turningValue = -0.3;
+			if (turningValue < -0.6) {
+				turningValue = -0.6;
 			}
 			m_robotDrive.arcadeDrive(0.65, -turningValue * 0.7);
 				}
