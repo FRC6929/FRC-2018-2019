@@ -337,8 +337,8 @@ Encoder encPince;
 					limit_timer.start();
 					r_pidController.enable();
 					l_pidController.enable();
-					r_pidController.setAbsoluteTolerance(0.01);
-					l_pidController.setAbsoluteTolerance(0.01);
+					r_pidController.setAbsoluteTolerance(0.005);
+					l_pidController.setAbsoluteTolerance(0.005);
 					r_pidController.setSetpoint(90);
 					l_pidController.setSetpoint(90);
 					
@@ -393,7 +393,7 @@ Encoder encPince;
 					
 					double[] gripValuesX = new double[0];
 					double[] XValue =  xCenterEntry.getDoubleArray(gripValuesX);
-					double angleVise = 320 / 10.33; // /10.33
+					double angleVise = 320 * 7 / 127; // /10.33
 
 				
 					
@@ -407,7 +407,7 @@ Encoder encPince;
 								encGauche.reset();
 								encDroit.reset();
 								ahrs.reset();
-								double trouve =  XValue[0] / 10.33;
+								double trouve =  XValue[0]* 7 / 127; //10.33
 								SmartDashboard.putNumber("Trouve", trouve);
 								
 
@@ -415,7 +415,7 @@ Encoder encPince;
 						
 								premiereMesure = true;  
 								
-								calcul = angleVise - trouve;
+								calcul = trouve - angleVise;
 								SmartDashboard.putNumber("Calculs", calcul);
 							}
 							
@@ -423,10 +423,10 @@ Encoder encPince;
 								
 								double angleGyro = ahrs.getAngle();
 								SmartDashboard.putNumber("Angle Gyro", angleGyro);
-								double setPoint =  -calcul - angleGyro ;
+								double setPoint =  calcul - angleGyro ;
 								SmartDashboard.putNumber("Set Point", setPoint);
 								
-								double setPointTrue = -setPoint * 0.1;
+								double setPointTrue = -setPoint * 0.5;
 								if(setPointTrue > 0.5) {
 									setPointTrue = 0.5;
 								}
@@ -439,7 +439,7 @@ Encoder encPince;
 					}else if (premiereMesure == true) {
 						double angleGyro = ahrs.getAngle();
 						SmartDashboard.putNumber("Angle Gyro v2", angleGyro);
-						double setPoint =  -calcul - angleGyro ;
+						double setPoint =  calcul - angleGyro ;
 						SmartDashboard.putNumber("Set Point v2", setPoint);
 						double setPointTrue = -setPoint * 0.5;
 						if(setPointTrue > 0.5) {
@@ -448,7 +448,7 @@ Encoder encPince;
 						if (setPointTrue < -0.5) {
 							setPointTrue = -0.5;
 						}
-						m_robotDrive.arcadeDrive(-0.5,	-setPoint * 0.04); //0.025
+						m_robotDrive.arcadeDrive(-0.5,	setPointTrue); //0.025
 			
 					}else {
 						m_robotDrive.arcadeDrive(0, -0.4);
@@ -525,13 +525,13 @@ Encoder encPince;
 				}
 				//retourTimer.get() < 3.5
 	 		} else if (ordreAuto == 8) {
-	 			PID_timer.reset();
-	 			PID_timer.start();
+
 	 			MPC1.set(0.15);
 	 			MPC2.set(-0.15);
 	 			if(autoLock2 == false) {
 	 				ahrs.reset();
-	 				
+		 			PID_timer.reset();
+		 			PID_timer.start();
 	 				r_pidController.enable();
 	 				l_pidController.enable();
 	 				r_pidController.setSetpoint(-52);
@@ -570,33 +570,8 @@ Encoder encPince;
 	 		}else if (ordreAuto == 10) {
 				MPC1.set(-0.75);
 				MPC2.set(0.75);
-		/*		if(limitswitchPince.get() == false) {
-					ordreAuto = 11;
-				}*/
-	 		}else {
-	 			m_robotDrive.arcadeDrive(0, 0);
-	 			
-	 		}
-	
+	 		}// Faire else pour retourner vers 
 		
-		/*else if (retourTimer.get() < 10) {
-				double turningValue = -ahrs.getAngle() ;
-				SmartDashboard.putNumber("Turning Value", turningValue);
-				
-				if(turningValue > 0.5) {
-					turningValue = 0.5;
-				}
-				if (turningValue < -0.5) {
-					turningValue = -0.5;
-				}
-				m_robotDrive.arcadeDrive(0.5, turningValue);
-	 		} else if (retourTimer.get() > 12) {
-				MPC1.set(-0.75);
-				MPC2.set(0.75);
-	 		}
-		
-			
-		*/					
 			}
 			SmartDashboard.putNumber("ordreAuto", ordreAuto);
 			break;
@@ -853,13 +828,13 @@ Encoder encPince;
 			double turningValue = -ahrs.getAngle() + objectifStraight  ;
 			SmartDashboard.putNumber("Turning Value", turningValue);
 			
-			if(turningValue > 0.6) {
-				turningValue = 0.6;
+			if(turningValue > 0.575) {
+				turningValue = 0.575;
 			}
-			if (turningValue < -0.6) {
-				turningValue = -0.6;
+			if (turningValue < -0.575) {
+				turningValue = -0.575;
 			}
-			m_robotDrive.arcadeDrive(0.65, -turningValue * 0.7);
+			m_robotDrive.arcadeDrive(0.65, -turningValue * 1);
 				}
 	
 //Fin du teleop	
