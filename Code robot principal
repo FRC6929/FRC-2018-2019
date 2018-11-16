@@ -56,6 +56,7 @@ public class Robot extends TimedRobot {
 	private Timer yButtonTimer = new Timer();
 	private Timer PID_timer = new Timer();
 	private Timer retourTimer = new Timer();
+	private Timer pelleTimer = new Timer();
 	 AHRS ahrs;
      DigitalInput limitswitchPince;
 
@@ -94,16 +95,17 @@ Encoder encPince;
 		private PIDController encPince_pidController;
 	//Les variables du pneumatic
 //		DoubleSolenoid exampleDouble = new DoubleSolenoid(0, 7);
-	//	DoubleSolenoid pneuPince = new DoubleSolenoid(4, 5);
-		DoubleSolenoid pneuPelle = new DoubleSolenoid(0, 1);
+		DoubleSolenoid pneuPince = new DoubleSolenoid(4, 5);
+		DoubleSolenoid pneuPelle = new DoubleSolenoid(6, 7);
 	//	DoubleSolenoid pneuPelleL = new DoubleSolenoid(1, 6);
 		
 	//Ah ce tres cher Network Table
 	NetworkTableEntry xCenterEntry;
 	 double[] centerX;
-	
+	 
+	 
 	 Compressor c = new Compressor(0);
-	 boolean enabled = c.enabled();
+	 //boolean enabled = c.enabled();
 	//Variables personnalisees (Qui ne sont que des variables fictives et non pas des elements du robot)
 	
 	boolean Bbuton = false;
@@ -125,6 +127,11 @@ Encoder encPince;
 	int rotationPelle=1;
 	boolean pelleAvance = false;
 	
+	
+	boolean rotationPelle90Plus = false;
+	boolean rotationPelle90Moins = false;
+	boolean rotationPelle180Plus = false;
+	boolean rotationPelle180Moins = false;
 //Fin de l'annonce des variables
 
 //-----------------------Lancement du robot------------------------------------------
@@ -135,6 +142,7 @@ Encoder encPince;
 	      } catch (RuntimeException ex ) {
 	          DriverStation.reportError("Error instantiating navX-MXP:  " + ex.getMessage(), true);
 	      }
+	
 //On setup certaines pieces des le demarage
 	      ahrs.reset();
 		UsbCamera camera = CameraServer.getInstance().startAutomaticCapture();
@@ -1091,6 +1099,7 @@ Encoder encPince;
 		encGauche.reset();
 		limit_timer.reset();
 		limit_timer.start();
+		rotationPelle = 1;
 		
 		r_pidController.enable();
 		r_pidController.setSetpoint(0);
@@ -1100,89 +1109,161 @@ Encoder encPince;
 		encPince_pidController.enable();
 		encPince_pidController.setSetpoint(124);
 		
+		rotationPelle90Moins = false;
+		rotationPelle180Moins = false;
+		rotationPelle180Plus = false;
+		rotationPelle90Plus = false;
+	
 
 //Fin de teleopInit
 	}
 
 //----------------------------Deroulement du mode Teleop------------------------------------
 	@Override
-	public void teleopPeriodic() {
-		enabled = c.enabled();
+	public void teleopPeriodic() { 
+		
 //Network Tables
 	//C'est la qu'on va mettre nos Network Tables, si besoin est	
 SmartDashboard.putBoolean("La Vie", c.enabled());
+	
 
 
-
-		if(m_stick.getRawButton(10)==true) {
+		if(coPilote_stick.getRawButtonPressed(10)==true) {
 //Pelle vers le bas
-			if(rotationPelle == 2) {
+			pneuPelle.set(DoubleSolenoid.Value.kForward);
+		//	rotationPelle90Plus = true;
+			//rotationPelle180Moins = false;
+			//rotationPelle180Plus = false;
+			/*if(rotationPelle == 2) {
+				//+90
+				rotationPelle90Plus = true;
+				rotationPelle90Moins = false;
+				rotationPelle180Moins = false;
+				rotationPelle180Plus = false;
 				
-				
-				
+				pelleTimer.reset();
+				pelleTimer.start();
+
 			}
 			else if(rotationPelle == 3) {
+				rotationPelle180Plus = true;		
+				rotationPelle90Moins = false;
+				rotationPelle180Moins = false;
+				rotationPelle90Plus = true;
 				
+				pelleTimer.reset();
+				pelleTimer.start();
 			}
 				
 			
 			
 			
-			
+			*/
 			rotationPelle = 1;
 			}
-			else if(m_stick.getRawButton(9)==true) {
+			if(coPilote_stick.getRawButtonPressed(9)==true) {
 //Vers l'interieur
-				
-				
-				if(rotationPelle == 1) {
+				pneuPelle.set(DoubleSolenoid.Value.kReverse);
+			//	rotationPelle90Plus = false;
+			//	rotationPelle180Moins = true;
+			//	rotationPelle180Plus = false;
+			/*	if(rotationPelle == 1) {
+					rotationPelle90Moins = true;
+					rotationPelle180Moins = false;
+					rotationPelle180Plus = false;
+					rotationPelle90Plus = true;
 					
+					pelleTimer.reset();
+					pelleTimer.start();
 				}
 				else if(rotationPelle == 3) {
+					rotationPelle90Plus = true;
 					
+					rotationPelle90Moins = false;
+					rotationPelle180Moins = false;
+					rotationPelle180Plus = false;
+				
+					pelleTimer.reset();
+					pelleTimer.start();
 				}
 			
 				
 				
-			//pneuPelle.set(DoubleSolenoid.Value.kForward);
-		//	pneuPelleL.set(DoubleSolenoid.Value.kForward);
-				
-				
+				*/
 			rotationPelle = 2;
 			}
-			else if(m_stick.getRawButton(6)==true) {
+			if(coPilote_stick.getRawButton(6)==true) {
 //Vers l'exterieur
 				
-				if(rotationPelle == 1) {
+				pneuPince.set(DoubleSolenoid.Value.kReverse);
+			//	rotationPelle90Plus = false;
+			//	rotationPelle180Moins = false;
+			//	rotationPelle180Plus = true;
+			/*	if(rotationPelle == 1) {
+					rotationPelle180Moins = true;
+					rotationPelle90Moins = false;
+					rotationPelle180Plus = false;
+					rotationPelle90Plus = false;
 					
+					pelleTimer.reset();
+					pelleTimer.start();
 				}
 				else if(rotationPelle == 2) {
+					rotationPelle90Moins = true;
+					rotationPelle180Moins = false;
+					rotationPelle180Plus = false;
+					rotationPelle90Plus = false;
 					
+					pelleTimer.reset();
+					pelleTimer.start();
 				}
-		
 				
+				*/
 			rotationPelle = 3;
 			}
 		
-			else if(coPilote_stick.getRawButtonPressed(8)==true) {
+			if(coPilote_stick.getRawButtonPressed(8)==true) {
 	//Avancer reculer pince
-				
-				if(pelleAvance == false) {
+				pneuPince.set(DoubleSolenoid.Value.kForward);
+				/*if(pelleAvance == false) {
 					
-					pneuPelle.set(DoubleSolenoid.Value.kForward);
+				//	pneuPelle.set(DoubleSolenoid.Value.kForward);
+					pneuPince.set(DoubleSolenoid.Value.kReverse);
 					
 				} else if (pelleAvance == true) {
 					
-					pneuPelle.set(DoubleSolenoid.Value.kReverse);
+				//	pneuPelle.set(DoubleSolenoid.Value.kReverse);
+					pneuPince.set(DoubleSolenoid.Value.kForward);
 				
 				}
-				
+				*/
 				
 				pelleAvance = !pelleAvance;
 			}
 		
 		
 		
+		if(rotationPelle90Plus == true) {
+		
+				MPelle1.set(0);
+			
+		}
+		if(rotationPelle90Moins == true) {
+			
+				MPelle1.set(-0);
+	
+		}
+		if(rotationPelle180Plus == true) {
+		
+			MPelle1.set(0.4);
+		
+		}
+		if(rotationPelle180Moins == true) {
+			
+			MPelle1.set(-0.4);
+			
+			
+		}
 
 
 	//Activer les roulettes de la pince(R1 et L1)
@@ -1309,7 +1390,7 @@ SmartDashboard.putBoolean("La Vie", c.enabled());
 		//	pneuPince.set(DoubleSolenoid.Value.kForward);
 			}
 		
-	//Eviter 3000 fois le meme bouton. S'active quan on lache le bouton
+	//Eviter 3000 fois le meme bouton. S'active quand on lache le bouton
 		if(m_stick.getRawButton(2) == false) {
 			Bbuton = false;
 			}
