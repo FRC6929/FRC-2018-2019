@@ -132,6 +132,7 @@ Encoder encPince;
 	boolean rotationPelle90Moins = false;
 	boolean rotationPelle180Plus = false;
 	boolean rotationPelle180Moins = false;
+	boolean pelleHaut = false;
 //Fin de l'annonce des variables
 
 //-----------------------Lancement du robot------------------------------------------
@@ -1100,14 +1101,16 @@ Encoder encPince;
 		limit_timer.reset();
 		limit_timer.start();
 		rotationPelle = 1;
+		pneuPince.set(DoubleSolenoid.Value.kOff);
+		pneuPelle.set(DoubleSolenoid.Value.kOff);
 		
 		r_pidController.enable();
 		r_pidController.setSetpoint(0);
 		l_pidController.enable();
 		l_pidController.setSetpoint(0);
 		
-		encPince_pidController.enable();
-		encPince_pidController.setSetpoint(124);
+	//	encPince_pidController.enable();
+	//	encPince_pidController.setSetpoint(124);
 		
 		rotationPelle90Moins = false;
 		rotationPelle180Moins = false;
@@ -1130,11 +1133,7 @@ SmartDashboard.putBoolean("La Vie", c.enabled());
 
 		if(coPilote_stick.getRawButtonPressed(10)==true) {
 //Pelle vers le bas
-			pneuPelle.set(DoubleSolenoid.Value.kForward);
-		//	rotationPelle90Plus = true;
-			//rotationPelle180Moins = false;
-			//rotationPelle180Plus = false;
-			/*if(rotationPelle == 2) {
+			if(rotationPelle == 2) {
 				//+90
 				rotationPelle90Plus = true;
 				rotationPelle90Moins = false;
@@ -1158,16 +1157,12 @@ SmartDashboard.putBoolean("La Vie", c.enabled());
 			
 			
 			
-			*/
+			
 			rotationPelle = 1;
 			}
 			if(coPilote_stick.getRawButtonPressed(9)==true) {
 //Vers l'interieur
-				pneuPelle.set(DoubleSolenoid.Value.kReverse);
-			//	rotationPelle90Plus = false;
-			//	rotationPelle180Moins = true;
-			//	rotationPelle180Plus = false;
-			/*	if(rotationPelle == 1) {
+				if(rotationPelle == 1) {
 					rotationPelle90Moins = true;
 					rotationPelle180Moins = false;
 					rotationPelle180Plus = false;
@@ -1189,17 +1184,13 @@ SmartDashboard.putBoolean("La Vie", c.enabled());
 			
 				
 				
-				*/
+				
 			rotationPelle = 2;
 			}
 			if(coPilote_stick.getRawButton(6)==true) {
 //Vers l'exterieur
 				
-				pneuPince.set(DoubleSolenoid.Value.kReverse);
-			//	rotationPelle90Plus = false;
-			//	rotationPelle180Moins = false;
-			//	rotationPelle180Plus = true;
-			/*	if(rotationPelle == 1) {
+				if(rotationPelle == 1) {
 					rotationPelle180Moins = true;
 					rotationPelle90Moins = false;
 					rotationPelle180Plus = false;
@@ -1218,50 +1209,87 @@ SmartDashboard.putBoolean("La Vie", c.enabled());
 					pelleTimer.start();
 				}
 				
-				*/
+				
 			rotationPelle = 3;
 			}
 		
 			if(coPilote_stick.getRawButtonPressed(8)==true) {
 	//Avancer reculer pince
-				pneuPince.set(DoubleSolenoid.Value.kForward);
-				/*if(pelleAvance == false) {
+				
+				if(pelleAvance == false) {
 					
-				//	pneuPelle.set(DoubleSolenoid.Value.kForward);
-					pneuPince.set(DoubleSolenoid.Value.kReverse);
+					pneuPelle.set(DoubleSolenoid.Value.kForward);
+				//	pneuPince.set(DoubleSolenoid.Value.kReverse);
 					
 				} else if (pelleAvance == true) {
 					
-				//	pneuPelle.set(DoubleSolenoid.Value.kReverse);
-					pneuPince.set(DoubleSolenoid.Value.kForward);
+					pneuPelle.set(DoubleSolenoid.Value.kReverse);
+				//	pneuPince.set(DoubleSolenoid.Value.kForward);
 				
 				}
-				*/
+				
 				
 				pelleAvance = !pelleAvance;
 			}
+			
+			if(coPilote_stick.getRawButtonPressed(7)==true) {
+				//Avancer reculer pince
+							
+							if(pelleHaut == false) {
+								
+								pneuPince.set(DoubleSolenoid.Value.kForward);
+							//	pneuPince.set(DoubleSolenoid.Value.kReverse);
+								
+							} else if (pelleHaut == true) {
+								
+								pneuPince.set(DoubleSolenoid.Value.kReverse);
+							//	pneuPince.set(DoubleSolenoid.Value.kForward);
+							
+							}
+							
+							
+							pelleHaut = !pelleHaut;
+						}
 		
 		
 		
 		if(rotationPelle90Plus == true) {
-		
-				MPelle1.set(0);
+			if(pelleTimer.get() <= 0.3) {
+				MPelle1.set(0.4);
+		} else {
+			MPelle1.set(0);
+			rotationPelle90Plus = false;
+		}
 			
 		}
 		if(rotationPelle90Moins == true) {
+			if(pelleTimer.get() <= 0.3) {
+				MPelle1.set(-0.4);
+			}else{
+				MPelle1.set(0);
+				rotationPelle90Moins = false;
+					
+			}
 			
-				MPelle1.set(-0);
 	
 		}
 		if(rotationPelle180Plus == true) {
-		
-			MPelle1.set(0.4);
-		
+		 if(pelleTimer.get() <= 0.6) {
+			 MPelle1.set(0.4); 
+		 }else{
+				MPelle1.set(0);
+				rotationPelle180Plus = false;
+					
+			}
 		}
 		if(rotationPelle180Moins == true) {
-			
+			if(pelleTimer.get() < 0.6) {
 			MPelle1.set(-0.4);
-			
+			}else{
+				MPelle1.set(0);
+				rotationPelle180Moins = false;
+					
+			}
 			
 		}
 
@@ -1283,13 +1311,13 @@ SmartDashboard.putBoolean("La Vie", c.enabled());
 		
 		//Deployer/controller la pince
 		
-			if(coPilote_stick.getRawButtonPressed(4) == true) {
+			if(coPilote_stick.getRawButton(4) == true) {
 				encPince_pidController.disable();
-				MPR1.set(0.4);
-			}else if (coPilote_stick.getRawButtonPressed(3)) {
+				MPR1.set(0.6);
+			}else if (coPilote_stick.getRawButton(3)) {
 				encPince_pidController.disable();
-				MPR1.set(-0.4);
-			} else if (limit_timer.get() >= 1.5){
+				MPR1.set(-0.6);
+			}else {
 				MPR1.set(0);
 			}
 			
