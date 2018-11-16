@@ -1,0 +1,18 @@
+//ferme et avance
+			if(m_stick.getRawButton(10)==true){
+				pneuPelle.set(DoubleSolenoid.Value.kForward);
+				MPelle1.set(0.17);
+				}
+			//bas et avance
+			else if(m_stick.getRawButton(9)==true){
+				pneuPelle.set(DoubleSolenoid.Value.kForward);
+				}
+			//bas et retracte
+			else if(m_stick.getRawButton(6)==true) {
+					pneuPelle.set(DoubleSolenoid.Value.kReverse);					
+			    }
+			//ouvert et retracte    
+			else if(m_stick.getRawButton(8)==true) {
+				pneuPelle.set(DoubleSolenoid.Value.kReverse);	
+				MPelle1.set(-0.17);
+				}
