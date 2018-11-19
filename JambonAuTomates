@@ -1,0 +1,1329 @@
+if (retourAuto == false && ordreAuto == 0) {
+				double turningValue = -ahrs.getAngle();
+				SmartDashboard.putNumber("Turning Value", turningValue);
+
+				if(turningValue > 0.3) {
+					turningValue = 0.3;
+				}
+				
+				else if (turningValue < -0.3) {
+					turningValue = -0.3;
+				}
+
+				m_robotDrive.arcadeDrive(0.65, -turningValue * 0.7);	
+			}
+			
+			if (roue >= 9.5 ) { 
+				ordreAuto = 1;
+			
+			
+	//PID_t	imer.get() < 0.8
+			}else if (retourAuto == false && ordreAuto == 1 ){
+				if(autoLock1 == false) {
+				//PID_timer.start();
+				ahrs.reset();
+				encGauche.reset();
+				encDroit.reset();
+				PID_timer.start();
+				r_pidController.enable();
+				l_pidController.enable();
+				r_pidController.setSetpoint(-93);
+				l_pidController.setSetpoint(-93);
+				r_pidController.setAbsoluteTolerance(0.1);
+				l_pidController.setAbsoluteTolerance(0.1);
+				autoLock1 = true;
+				autoLock2 = false;
+			}
+			SmartDashboard.putNumber("PId gyro value", ahrs.getAngle());
+			if(r_pidController.onTarget() == true && l_pidController.onTarget() == true) {
+				ordreAuto = 2;
+				
+			}else if(PID_timer.get() >= 0.9) {
+				ordreAuto = 2;
+				PID_timer.stop();
+				PID_timer.reset();
+			}
+			
+		//PID_timer.get() >= 0.8 && roue < 4.75
+		}else if (retourAuto == false && ordreAuto == 2) {
+			if(autoLock2 == false) {
+			encGauche.reset();
+			encDroit.reset();
+				ahrs.reset();
+				PID_timer.stop();
+			
+				r_pidController.disable();
+				l_pidController.disable();
+				
+				autoLock2 = true;
+				autoLock1 = false;
+			}
+			
+			double turningValue = -ahrs.getAngle() ;
+			SmartDashboard.putNumber("Turning Value", turningValue);
+			
+			if(turningValue > 0.5) {
+				turningValue = 0.5;
+			}
+			if (turningValue < -0.5) {
+				turningValue = -0.5;
+			}
+			
+			m_robotDrive.arcadeDrive(0.75, -turningValue * 0.7);
+			
+			if(roue >= 8 ) {
+				ordreAuto = 3;
+			}
+			//PID_timer.get() < 1
+		}else if ( retourAuto == false && ordreAuto == 3){
+			if(autoLock1 == false) {
+				PID_timer.reset();
+				PID_timer.start();
+				ahrs.reset();
+				
+				limit_timer.start();
+				r_pidController.enable();
+				l_pidController.enable();
+				r_pidController.setAbsoluteTolerance(0.005);
+				l_pidController.setAbsoluteTolerance(0.005);
+				r_pidController.setSetpoint(-45);
+				l_pidController.setSetpoint(-45);
+				
+				autoLock1 = true;
+				autoLock2 = false;
+				
+	
+			}
+			if(PID_timer.get() >= 0.9) {
+				ordreAuto = 4;
+			}
+			SmartDashboard.putNumber("Pid Timer",PID_timer.get());
+			if(r_pidController.onTarget() == true && l_pidController.onTarget() == true) 
+			{
+				ordreAuto = 4;
+			}else if (retourAuto == false  && ordreAuto == 4){
+				if(autoLock2 == false) {
+				
+					ahrs.reset();
+					PID_timer.stop();
+					r_pidController.disable();
+					l_pidController.disable();
+					SmartDashboard.putString("PidDisabled","Yes");
+					
+					autoLock2 = true;
+					autoLock1 = false;
+			}
+				
+				double turningValue = -ahrs.getAngle() ;
+				SmartDashboard.putNumber("Turning Value", turningValue);
+				
+				if(turningValue > 0.5) {
+					turningValue = 0.5;
+				}
+				if (turningValue < -0.5) {
+					turningValue = -0.5;
+				}
+			
+				m_robotDrive.arcadeDrive(0, -turningValue * 0.7);
+				
+				if(0 == 0) {
+					ordreAuto = 5;
+				}
+			}else if (ordreAuto == 5 || retourAuto == true ){
+				
+				retourAuto = true;
+		
+		if(limitswitchPince.get() == true && autoPince == false) {
+					
+					double[] gripValuesX = new double[0];
+					double[] XValue =  xCenterEntry.getDoubleArray(gripValuesX);
+					double angleVise = 320 * 7 / 127; // /10.33
+
+				
+					
+					
+					MPC1.set(0.32);
+				MPC2.set(-0.32);
+					
+					if(XValue.length != 0) {
+
+							if(premiereMesure == false) {
+								encGauche.reset();
+								encDroit.reset();
+								ahrs.reset();
+								double trouve =  XValue[0]* 7 / 127; //10.33
+								SmartDashboard.putNumber("Trouve", trouve);
+								
+
+								
+						
+								premiereMesure = true;  
+								
+								calcul = trouve - angleVise;
+								SmartDashboard.putNumber("Calculs", calcul);
+							}
+							
+							if(premiereMesure == true) {
+								
+								double angleGyro = ahrs.getAngle();
+								SmartDashboard.putNumber("Angle Gyro", angleGyro);
+								double setPoint =  calcul - angleGyro ;
+								SmartDashboard.putNumber("Set Point", setPoint);
+								
+								double setPointTrue = -setPoint * 0.5;
+								if(setPointTrue > 0.5) {
+									setPointTrue = 0.5;
+								}
+								if (setPointTrue < -0.5) {
+									setPointTrue = -0.5;
+								}
+								m_robotDrive.arcadeDrive(-0.5, setPointTrue); //0.025
+							}
+                                                                                         
+					}else if (premiereMesure == true) {
+						double angleGyro = ahrs.getAngle();
+						SmartDashboard.putNumber("Angle Gyro v2", angleGyro);
+						double setPoint =  calcul - angleGyro ;
+						SmartDashboard.putNumber("Set Point v2", setPoint);
+						double setPointTrue = -setPoint * 0.5;
+						if(setPointTrue > 0.5) {
+							setPointTrue = 0.5;
+						}
+						if (setPointTrue < -0.5) {
+							setPointTrue = -0.5;
+						}
+						m_robotDrive.arcadeDrive(-0.5,	setPointTrue); //0.025
+			
+					}else {
+						m_robotDrive.arcadeDrive(0, -0.4);
+				}
+					//roue < 0.3
+				}else if( ordreAuto == 5) {
+					MPC1.set(0.15);
+					MPC2.set(-0.15);
+					autoPince = true;
+
+	 			
+					double turningValue = ahrs.getAngle();
+				
+					if(turningValue > 0.5) {
+						turningValue = 0.5;
+					}
+					if (turningValue < -0.5) {
+						turningValue = -0.5;
+					}
+	 			
+					m_robotDrive.arcadeDrive(0.6, turningValue );
+	 			
+					if(roue >= 0.25) {
+						ordreAuto = 6;
+					}
+				} else if (ordreAuto == 6) {
+					MPC1.set(0.55);
+					MPC2.set(-0.55);
+					if(autoLock1 == false) {
+						ahrs.reset();
+						PID_timer.reset();
+						PID_timer.start();
+						
+						
+						retourTimer.start();
+						r_pidController.enable();
+						l_pidController.enable();
+						r_pidController.setSetpoint(45);
+						l_pidController.setSetpoint(45);
+						
+						r_pidController.setAbsoluteTolerance(0.05);
+						l_pidController.setAbsoluteTolerance(0.05);
+						autoLock1 = true;
+						autoLock2 = false;
+					}
+					
+					if(r_pidController.onTarget() == true && l_pidController.onTarget() == true) {
+						ordreAuto = 7;
+					}
+					if(PID_timer.get() >= 0.9) {
+						ordreAuto = 7;
+					}
+				} else if (ordreAuto == 7) {
+		 			MPC1.set(0.15);
+		 			MPC2.set(-0.15);
+		 			r_pidController.disable();
+		 			l_pidController.disable();
+					double turningValue = -ahrs.getAngle();
+					SmartDashboard.putNumber("Turning Value", turningValue);
+					
+					if(turningValue > 0.3) {
+						turningValue = 0.3;
+					}
+					if (turningValue < -0.3) {
+						turningValue = -0.3;
+					}
+					m_robotDrive.arcadeDrive(-0.7, 0);
+					
+					if(roue <= -8) {
+						ordreAuto = 8;
+					}
+					//retourTimer.get() < 3.5
+		 		} else if (ordreAuto == 8) {
+
+		 			MPC1.set(0.15);
+		 			MPC2.set(-0.15);
+		 			if(autoLock2 == false) {
+		 				ahrs.reset();
+			 			PID_timer.reset();
+			 			PID_timer.start();
+		 				r_pidController.enable();
+		 				l_pidController.enable();
+		 				r_pidController.setSetpoint(93);
+		 				l_pidController.setSetpoint(93);
+		 				
+		 				autoLock2 = true;
+		 				autoLock1 = false;
+		 			}
+		 			
+		 			if(r_pidController.onTarget() == true && l_pidController.onTarget() == true) {
+		 				ordreAuto = 9;
+		 			}
+		 			
+		 			if(PID_timer.get() >= 0.9) {
+		 				ordreAuto = 9;
+		 			}
+		 		} else if (ordreAuto == 9) {
+		 			if(autoLock1 == false) {
+		 				retourTimer.reset();
+		 				retourTimer.start();
+		 				
+		 				autoLock1 = true;
+		 				autoLock2 = false;
+		 			}
+		 			MPC1.set(0.15);
+		 			MPC2.set(-0.15);
+		 			r_pidController.disable();
+		 			l_pidController.disable();
+					double turningValue = -ahrs.getAngle();
+					SmartDashboard.putNumber("Turning Value", turningValue);
+					
+					if(turningValue > 0.3) {
+						turningValue = 0.3;
+					}
+					if (turningValue < -0.3) {
+						turningValue = -0.3;
+					}
+					m_robotDrive.arcadeDrive(-0.6, 0);
+					
+					if(roue >= -9.5) {
+						ordreAuto = 10;
+					}
+		 		}else if (ordreAuto == 10) {
+					MPC1.set(-0.75);
+					MPC2.set(0.75);
+					
+					if(retourTimer.get() >= 0.5) {
+						ordreAuto = 11;
+					}
+		 		}else if(ordreAuto == 11) {
+		 			if(autoLock2 == false) {
+		 				ahrs.reset();
+		 				retourTimer.reset();
+		 				retourTimer.start();
+		 				
+
+		 				
+			 			PID_timer.reset();
+			 			PID_timer.start();
+		 				r_pidController.enable();
+		 				l_pidController.enable();
+		 				r_pidController.setSetpoint(-180);
+		 				l_pidController.setSetpoint(-180);
+		 				
+		 				autoLock1 = false;
+		 				autoLock2 = true;
+		 			}
+		 			MPC1.set(0);
+		 			MPC2.set(0);
+		 			
+		 			if(r_pidController.onTarget() == true && l_pidController.onTarget() == true) {
+		 				ordreAuto = 12;
+		 			}
+		 			
+		 			if(PID_timer.get() >= 0.9) {
+		 				ordreAuto = 12;
+		 			}
+		 	
+		 		}else	if(ordreAuto == 12) {
+		 			if(autoLock1 == false) {
+		 				ahrs.reset();
+		 				
+		 				
+		 				autoLock2 = false;
+		 				autoLock1 = true;
+		 			}
+		 			double turningValue = -ahrs.getAngle();
+					if(turningValue > 0.3) {
+						turningValue = 0.3;
+					}
+					if (turningValue < -0.3) {
+						turningValue = -0.3;
+					}
+		 			
+		 		 	m_robotDrive.arcadeDrive(0.6, 0);
+			
+				}
+	 				
+		 		
+		 		
+		 		}
+				SmartDashboard.putNumber("ordreAuto", ordreAuto);
+	
+				
+					
+					
+					
+		}	
+		break;			
+			
+			
+		case kCustomAuto4:
+
+			if (retourAuto == false && ordreAuto == 0) {
+				double turningValue = -ahrs.getAngle();
+				SmartDashboard.putNumber("Turning Value", turningValue);
+
+				if(turningValue > 0.3) {
+					turningValue = 0.3;
+				}
+				
+				else if (turningValue < -0.3) {
+					turningValue = -0.3;
+				}
+
+				m_robotDrive.arcadeDrive(0.65, -turningValue * 0.7);	
+			}
+			
+			if (roue >= 9.5 ) { 
+				ordreAuto = 1;
+			
+			
+	//PID_t	imer.get() < 0.8
+			}else if (retourAuto == false && ordreAuto == 1 ){
+				if(autoLock1 == false) {
+				//PID_timer.start();
+				ahrs.reset();
+				encGauche.reset();
+				encDroit.reset();
+				PID_timer.start();
+				r_pidController.enable();
+				l_pidController.enable();
+				r_pidController.setSetpoint(93);
+				l_pidController.setSetpoint(93);
+				r_pidController.setAbsoluteTolerance(0.1);
+				l_pidController.setAbsoluteTolerance(0.1);
+				autoLock1 = true;
+				autoLock2 = false;
+			}
+			SmartDashboard.putNumber("PId gyro value", ahrs.getAngle());
+			if(r_pidController.onTarget() == true && l_pidController.onTarget() == true) {
+				ordreAuto = 2;
+				
+			}else if(PID_timer.get() >= 0.9) {
+				ordreAuto = 2;
+				PID_timer.stop();
+				PID_timer.reset();
+			}
+			
+		//PID_timer.get() >= 0.8 && roue < 4.75
+		}else if (retourAuto == false && ordreAuto == 2) {
+			if(autoLock2 == false) {
+			encGauche.reset();
+			encDroit.reset();
+				ahrs.reset();
+				PID_timer.stop();
+			
+				r_pidController.disable();
+				l_pidController.disable();
+				
+				autoLock2 = true;
+				autoLock1 = false;
+			}
+			
+			double turningValue = -ahrs.getAngle() ;
+			SmartDashboard.putNumber("Turning Value", turningValue);
+			
+			if(turningValue > 0.5) {
+				turningValue = 0.5;
+			}
+			if (turningValue < -0.5) {
+				turningValue = -0.5;
+			}
+			
+			m_robotDrive.arcadeDrive(0.75, -turningValue * 0.7);
+			
+			if(roue >= 8 ) {
+				ordreAuto = 3;
+			}
+			//PID_timer.get() < 1
+		}else if ( retourAuto == false && ordreAuto == 3){
+			if(autoLock1 == false) {
+				PID_timer.reset();
+				PID_timer.start();
+				ahrs.reset();
+				
+				limit_timer.start();
+				r_pidController.enable();
+				l_pidController.enable();
+				r_pidController.setAbsoluteTolerance(0.005);
+				l_pidController.setAbsoluteTolerance(0.005);
+				r_pidController.setSetpoint(45);
+				l_pidController.setSetpoint(45);
+				
+				autoLock1 = true;
+				autoLock2 = false;
+				
+	
+			}
+			if(PID_timer.get() >= 0.9) {
+				ordreAuto = 4;
+			}
+			SmartDashboard.putNumber("Pid Timer",PID_timer.get());
+			if(r_pidController.onTarget() == true && l_pidController.onTarget() == true) 
+			{
+				ordreAuto = 4;
+			}else if (retourAuto == false  && ordreAuto == 4){
+				if(autoLock2 == false) {
+				
+					ahrs.reset();
+					PID_timer.stop();
+					r_pidController.disable();
+					l_pidController.disable();
+					SmartDashboard.putString("PidDisabled","Yes");
+					
+					autoLock2 = true;
+					autoLock1 = false;
+			}
+				
+				double turningValue = -ahrs.getAngle() ;
+				SmartDashboard.putNumber("Turning Value", turningValue);
+				
+				if(turningValue > 0.5) {
+					turningValue = 0.5;
+				}
+				if (turningValue < -0.5) {
+					turningValue = -0.5;
+				}
+			
+				m_robotDrive.arcadeDrive(0, -turningValue * 0.7);
+				
+				if(0 == 0) {
+					ordreAuto = 5;
+				}
+			}else if (ordreAuto == 5 || retourAuto == true ){
+				
+				retourAuto = true;
+		
+		if(limitswitchPince.get() == true && autoPince == false) {
+					
+					double[] gripValuesX = new double[0];
+					double[] XValue =  xCenterEntry.getDoubleArray(gripValuesX);
+					double angleVise = 320 * 7 / 127; // /10.33
+
+				
+					
+					
+					MPC1.set(0.32);
+				MPC2.set(-0.32);
+					
+					if(XValue.length != 0) {
+
+							if(premiereMesure == false) {
+								encGauche.reset();
+								encDroit.reset();
+								ahrs.reset();
+								double trouve =  XValue[0]* 7 / 127; //10.33
+								SmartDashboard.putNumber("Trouve", trouve);
+								
+
+								
+						
+								premiereMesure = true;  
+								
+								calcul = trouve - angleVise;
+								SmartDashboard.putNumber("Calculs", calcul);
+							}
+							
+							if(premiereMesure == true) {
+								
+								double angleGyro = ahrs.getAngle();
+								SmartDashboard.putNumber("Angle Gyro", angleGyro);
+								double setPoint =  calcul - angleGyro ;
+								SmartDashboard.putNumber("Set Point", setPoint);
+								
+								double setPointTrue = -setPoint * 0.5;
+								if(setPointTrue > 0.5) {
+									setPointTrue = 0.5;
+								}
+								if (setPointTrue < -0.5) {
+									setPointTrue = -0.5;
+								}
+								m_robotDrive.arcadeDrive(-0.5, setPointTrue); //0.025
+							}
+                                                                                         
+					}else if (premiereMesure == true) {
+						double angleGyro = ahrs.getAngle();
+						SmartDashboard.putNumber("Angle Gyro v2", angleGyro);
+						double setPoint =  calcul - angleGyro ;
+						SmartDashboard.putNumber("Set Point v2", setPoint);
+						double setPointTrue = -setPoint * 0.5;
+						if(setPointTrue > 0.5) {
+							setPointTrue = 0.5;
+						}
+						if (setPointTrue < -0.5) {
+							setPointTrue = -0.5;
+						}
+						m_robotDrive.arcadeDrive(-0.5,	setPointTrue); //0.025
+			
+					}else {
+						m_robotDrive.arcadeDrive(0, -0.4);
+				}
+					//roue < 0.3
+				}else if( ordreAuto == 5) {
+					MPC1.set(0.15);
+					MPC2.set(-0.15);
+					autoPince = true;
+
+	 			
+					double turningValue = ahrs.getAngle();
+				
+					if(turningValue > 0.5) {
+						turningValue = 0.5;
+					}
+					if (turningValue < -0.5) {
+						turningValue = -0.5;
+					}
+	 			
+					m_robotDrive.arcadeDrive(0.6, turningValue );
+	 			
+					if(roue >= 0.25) {
+						ordreAuto = 6;
+					}
+				} else if (ordreAuto == 6) {
+					MPC1.set(0.55);
+					MPC2.set(-0.55);
+					if(autoLock1 == false) {
+						ahrs.reset();
+						PID_timer.reset();
+						PID_timer.start();
+						
+						
+						retourTimer.start();
+						r_pidController.enable();
+						l_pidController.enable();
+						r_pidController.setSetpoint(-45);
+						l_pidController.setSetpoint(-45);
+						
+						r_pidController.setAbsoluteTolerance(0.05);
+						l_pidController.setAbsoluteTolerance(0.05);
+						autoLock1 = true;
+						autoLock2 = false;
+					}
+					
+					if(r_pidController.onTarget() == true && l_pidController.onTarget() == true) {
+						ordreAuto = 7;
+					}
+					if(PID_timer.get() >= 0.9) {
+						ordreAuto = 7;
+					}
+				} else if (ordreAuto == 7) {
+		 			MPC1.set(0.15);
+		 			MPC2.set(-0.15);
+		 			r_pidController.disable();
+		 			l_pidController.disable();
+					double turningValue = -ahrs.getAngle();
+					SmartDashboard.putNumber("Turning Value", turningValue);
+					
+					if(turningValue > 0.3) {
+						turningValue = 0.3;
+					}
+					if (turningValue < -0.3) {
+						turningValue = -0.3;
+					}
+					m_robotDrive.arcadeDrive(-0.7, 0);
+					
+					if(roue <= -8) {
+						ordreAuto = 8;
+					}
+					//retourTimer.get() < 3.5
+		 		} else if (ordreAuto == 8) {
+
+		 			MPC1.set(0.15);
+		 			MPC2.set(-0.15);
+		 			if(autoLock2 == false) {
+		 				ahrs.reset();
+			 			PID_timer.reset();
+			 			PID_timer.start();
+		 				r_pidController.enable();
+		 				l_pidController.enable();
+		 				r_pidController.setSetpoint(-93);
+		 				l_pidController.setSetpoint(-93);
+		 				
+		 				autoLock2 = true;
+		 				autoLock1 = false;
+		 			}
+		 			
+		 			if(r_pidController.onTarget() == true && l_pidController.onTarget() == true) {
+		 				ordreAuto = 9;
+		 			}
+		 			
+		 			if(PID_timer.get() >= 0.9) {
+		 				ordreAuto = 9;
+		 			}
+		 		} else if (ordreAuto == 9) {
+		 			if(autoLock1 == false) {
+		 				retourTimer.reset();
+		 				retourTimer.start();
+		 				
+		 				autoLock1 = true;
+		 				autoLock2 = false;
+		 			}
+		 			MPC1.set(0.15);
+		 			MPC2.set(-0.15);
+		 			r_pidController.disable();
+		 			l_pidController.disable();
+					double turningValue = -ahrs.getAngle();
+					SmartDashboard.putNumber("Turning Value", turningValue);
+					
+					if(turningValue > 0.3) {
+						turningValue = 0.3;
+					}
+					if (turningValue < -0.3) {
+						turningValue = -0.3;
+					}
+					m_robotDrive.arcadeDrive(-0.6, 0);
+					
+					if(roue >= -9.5) {
+						ordreAuto = 10;
+					}
+		 		}else if (ordreAuto == 10) {
+					MPC1.set(-0.75);
+					MPC2.set(0.75);
+					
+					if(retourTimer.get() >= 0.5) {
+						ordreAuto = 11;
+					}
+		 		}else if(ordreAuto == 11) {
+		 			if(autoLock2 == false) {
+		 				ahrs.reset();
+		 				retourTimer.reset();
+		 				retourTimer.start();
+		 				
+
+		 				
+			 			PID_timer.reset();
+			 			PID_timer.start();
+		 				r_pidController.enable();
+		 				l_pidController.enable();
+		 				r_pidController.setSetpoint(180);
+		 				l_pidController.setSetpoint(180);
+		 				
+		 				autoLock1 = false;
+		 				autoLock2 = true;
+		 			}
+		 			MPC1.set(0);
+		 			MPC2.set(0);
+		 			
+		 			if(r_pidController.onTarget() == true && l_pidController.onTarget() == true) {
+		 				ordreAuto = 12;
+		 			}
+		 			
+		 			if(PID_timer.get() >= 0.9) {
+		 				ordreAuto = 12;
+		 			}
+		 	
+		 		}else	if(ordreAuto == 12) {
+		 			if(autoLock1 == false) {
+		 				ahrs.reset();
+		 				
+		 				
+		 				autoLock2 = false;
+		 				autoLock1 = true;
+		 			}
+		 			double turningValue = -ahrs.getAngle();
+					if(turningValue > 0.3) {
+						turningValue = 0.3;
+					}
+					if (turningValue < -0.3) {
+						turningValue = -0.3;
+					}
+		 			
+		 		 	m_robotDrive.arcadeDrive(0.6, 0);
+			
+				}
+	 				
+		 		
+		 		
+		 		}
+				SmartDashboard.putNumber("ordreAuto", ordreAuto);
+		}
+			break;
+			
+		case kCustomAuto5:
+
+			if (retourAuto == false && ordreAuto == 0) {
+				double turningValue = -ahrs.getAngle();
+				SmartDashboard.putNumber("Turning Value", turningValue);
+
+				if(turningValue > 0.3) {
+					turningValue = 0.3;
+				}
+				
+				else if (turningValue < -0.3) {
+					turningValue = -0.3;
+				}
+
+				m_robotDrive.arcadeDrive(0.65, -turningValue * 0.7);	
+			}
+			
+			if (roue >= 16 ) { 
+				ordreAuto = 1;
+			
+			
+	//PID_t	imer.get() < 0.8
+			}else if (retourAuto == false && ordreAuto == 1 ){
+				if(autoLock1 == false) {
+				//PID_timer.start();
+				ahrs.reset();
+				encGauche.reset();
+				encDroit.reset();
+				PID_timer.start();
+				r_pidController.enable();
+				l_pidController.enable();
+				r_pidController.setSetpoint(48);
+				l_pidController.setSetpoint(48);
+				r_pidController.setAbsoluteTolerance(0.1);
+				l_pidController.setAbsoluteTolerance(0.1);
+				autoLock1 = true;
+				autoLock2 = false;
+			}
+			SmartDashboard.putNumber("PId gyro value", ahrs.getAngle());
+			if(r_pidController.onTarget() == true && l_pidController.onTarget() == true) {
+				ordreAuto = 2;
+				
+			}else if(PID_timer.get() >= 0.9) {
+				ordreAuto = 2;
+				PID_timer.stop();
+				PID_timer.reset();
+			}
+			
+		//PID_timer.get() >= 0.8 && roue < 4.75
+		
+			}else if (retourAuto == false  && ordreAuto == 2){
+				if(autoLock2 == false) {
+				
+					ahrs.reset();
+					PID_timer.stop();
+					r_pidController.disable();
+					l_pidController.disable();
+					SmartDashboard.putString("PidDisabled","Yes");
+					
+					autoLock2 = true;
+					autoLock1 = false;
+			}
+				
+				double turningValue = -ahrs.getAngle() ;
+				SmartDashboard.putNumber("Turning Value", turningValue);
+				
+				if(turningValue > 0.5) {
+					turningValue = 0.5;
+				}
+				if (turningValue < -0.5) {
+					turningValue = -0.5;
+				}
+			
+				m_robotDrive.arcadeDrive(0, -turningValue * 0.7);
+				
+				if(0 == 0) {
+					ordreAuto = 3;
+				}
+			}else if (ordreAuto == 3 || retourAuto == true ){
+				
+				retourAuto = true;
+		
+		if(limitswitchPince.get() == true && autoPince == false) {
+					
+					double[] gripValuesX = new double[0];
+					double[] XValue =  xCenterEntry.getDoubleArray(gripValuesX);
+					double angleVise = 320 * 7 / 127; // /10.33
+
+				
+					
+					
+					MPC1.set(0.32);
+				MPC2.set(-0.32);
+					
+					if(XValue.length != 0) {
+
+							if(premiereMesure == false) {
+								encGauche.reset();
+								encDroit.reset();
+								ahrs.reset();
+								double trouve =  XValue[0]* 7 / 127; //10.33
+								SmartDashboard.putNumber("Trouve", trouve);
+								
+
+								
+						
+								premiereMesure = true;  
+								
+								calcul = trouve - angleVise;
+								SmartDashboard.putNumber("Calculs", calcul);
+							}
+							
+							if(premiereMesure == true) {
+								
+								double angleGyro = ahrs.getAngle();
+								SmartDashboard.putNumber("Angle Gyro", angleGyro);
+								double setPoint =  calcul - angleGyro ;
+								SmartDashboard.putNumber("Set Point", setPoint);
+								
+								double setPointTrue = -setPoint * 0.5;
+								if(setPointTrue > 0.5) {
+									setPointTrue = 0.5;
+								}
+								if (setPointTrue < -0.5) {
+									setPointTrue = -0.5;
+								}
+								m_robotDrive.arcadeDrive(-0.5, setPointTrue); //0.025
+							}
+                                                                                         
+					}else if (premiereMesure == true) {
+						double angleGyro = ahrs.getAngle();
+						SmartDashboard.putNumber("Angle Gyro v2", angleGyro);
+						double setPoint =  calcul - angleGyro ;
+						SmartDashboard.putNumber("Set Point v2", setPoint);
+						double setPointTrue = -setPoint * 0.5;
+						if(setPointTrue > 0.5) {
+							setPointTrue = 0.5;
+						}
+						if (setPointTrue < -0.5) {
+							setPointTrue = -0.5;
+						}
+						m_robotDrive.arcadeDrive(-0.5,	setPointTrue); //0.025
+			
+					}else {
+						m_robotDrive.arcadeDrive(0, -0.4);
+				}
+					//roue < 0.3
+				}else if( ordreAuto == 3) {
+					MPC1.set(0.15);
+					MPC2.set(-0.15);
+					autoPince = true;
+
+	 			
+					double turningValue = ahrs.getAngle();
+				
+					if(turningValue > 0.5) {
+						turningValue = 0.5;
+					}
+					if (turningValue < -0.5) {
+						turningValue = -0.5;
+					}
+	 			
+					m_robotDrive.arcadeDrive(0.6, turningValue );
+	 			
+					if(roue >= 0.25) {
+						ordreAuto = 4;
+					}
+				} else if (ordreAuto == 4) {
+					MPC1.set(0.55);
+					MPC2.set(-0.55);
+					if(autoLock1 == false) {
+						ahrs.reset();
+						PID_timer.reset();
+						PID_timer.start();
+						
+						
+						retourTimer.start();
+						r_pidController.enable();
+						l_pidController.enable();
+						r_pidController.setSetpoint(-48);
+						l_pidController.setSetpoint(-48);
+						
+						r_pidController.setAbsoluteTolerance(0.05);
+						l_pidController.setAbsoluteTolerance(0.05);
+						autoLock1 = true;
+						autoLock2 = false;
+					}
+					
+					if(r_pidController.onTarget() == true && l_pidController.onTarget() == true) {
+						ordreAuto = 5;
+					}
+					if(PID_timer.get() >= 0.9) {
+						ordreAuto = 5;
+					}
+				} else if (ordreAuto == 5) {
+		 			MPC1.set(0.15);
+		 			MPC2.set(-0.15);
+		 			r_pidController.disable();
+		 			l_pidController.disable();
+					double turningValue = -ahrs.getAngle();
+					SmartDashboard.putNumber("Turning Value", turningValue);
+					
+					if(turningValue > 0.3) {
+						turningValue = 0.3;
+					}
+					if (turningValue < -0.3) {
+						turningValue = -0.3;
+					}
+					m_robotDrive.arcadeDrive(-0.7, 0);
+					
+					if(roue <= -16) {
+						ordreAuto = 6;
+					}
+					//retourTimer.get() < 3.5
+		 		} else if (ordreAuto == 6) {
+					MPC1.set(-0.75);
+					MPC2.set(0.75);
+					
+					if(retourTimer.get() >= 0.5) {
+						ordreAuto = 7;
+					}
+		 		}else if(ordreAuto == 7) {
+		 			if(autoLock2 == false) {
+		 				ahrs.reset();
+		 				retourTimer.reset();
+		 				retourTimer.start();
+		 				
+
+		 				
+			 			PID_timer.reset();
+			 			PID_timer.start();
+		 				r_pidController.enable();
+		 				l_pidController.enable();
+		 				r_pidController.setSetpoint(-180);
+		 				l_pidController.setSetpoint(-180);
+		 				
+		 				autoLock1 = false;
+		 				autoLock2 = true;
+		 			}
+		 			MPC1.set(0);
+		 			MPC2.set(0);
+		 			
+		 			if(r_pidController.onTarget() == true && l_pidController.onTarget() == true) {
+		 				ordreAuto = 12;
+		 			}
+		 			
+		 			if(PID_timer.get() >= 0.9) {
+		 				ordreAuto = 12;
+		 			}
+		 	
+		 		}else	if(ordreAuto == 12) {
+		 			if(autoLock1 == false) {
+		 				ahrs.reset();
+		 				
+		 				
+		 				autoLock2 = false;
+		 				autoLock1 = true;
+		 			}
+		 			double turningValue = -ahrs.getAngle();
+					if(turningValue > 0.3) {
+						turningValue = 0.3;
+					}
+					if (turningValue < -0.3) {
+						turningValue = -0.3;
+					}
+		 			
+		 		 	m_robotDrive.arcadeDrive(0.6, 0);
+			
+				}
+	 				
+		 		
+		 		
+		 		
+				SmartDashboard.putNumber("ordreAuto", ordreAuto);
+		}	
+			
+			break;
+			
+			case kCustomAuto6:
+			
+			if (retourAuto == false && ordreAuto == 0) {
+				double turningValue = -ahrs.getAngle();
+				SmartDashboard.putNumber("Turning Value", turningValue);
+
+				if(turningValue > 0.3) {
+					turningValue = 0.3;
+				}
+				
+				else if (turningValue < -0.3) {
+					turningValue = -0.3;
+				}
+
+				m_robotDrive.arcadeDrive(0.65, -turningValue * 0.7);	
+			}
+			
+			if (roue >= 16 ) { 
+				ordreAuto = 1;
+			
+			
+	//PID_t	imer.get() < 0.8
+			}else if (retourAuto == false && ordreAuto == 1 ){
+				if(autoLock1 == false) {
+				//PID_timer.start();
+				ahrs.reset();
+				encGauche.reset();
+				encDroit.reset();
+				PID_timer.start();
+				r_pidController.enable();
+				l_pidController.enable();
+				r_pidController.setSetpoint(-48);
+				l_pidController.setSetpoint(-48);
+				r_pidController.setAbsoluteTolerance(0.1);
+				l_pidController.setAbsoluteTolerance(0.1);
+				autoLock1 = true;
+				autoLock2 = false;
+			}
+			SmartDashboard.putNumber("PId gyro value", ahrs.getAngle());
+			if(r_pidController.onTarget() == true && l_pidController.onTarget() == true) {
+				ordreAuto = 2;
+				
+			}else if(PID_timer.get() >= 0.9) {
+				ordreAuto = 2;
+				PID_timer.stop();
+				PID_timer.reset();
+			}
+			
+		//PID_timer.get() >= 0.8 && roue < 4.75
+		
+			}else if (retourAuto == false  && ordreAuto == 2){
+				if(autoLock2 == false) {
+				
+					ahrs.reset();
+					PID_timer.stop();
+					r_pidController.disable();
+					l_pidController.disable();
+					SmartDashboard.putString("PidDisabled","Yes");
+					
+					autoLock2 = true;
+					autoLock1 = false;
+			}
+				
+				double turningValue = -ahrs.getAngle() ;
+				SmartDashboard.putNumber("Turning Value", turningValue);
+				
+				if(turningValue > 0.5) {
+					turningValue = 0.5;
+				}
+				if (turningValue < -0.5) {
+					turningValue = -0.5;
+				}
+			
+				m_robotDrive.arcadeDrive(0, -turningValue * 0.7);
+				
+				if(0 == 0) {
+					ordreAuto = 3;
+				}
+			}else if (ordreAuto == 3 || retourAuto == true ){
+				
+				retourAuto = true;
+		
+		if(limitswitchPince.get() == true && autoPince == false) {
+					
+					double[] gripValuesX = new double[0];
+					double[] XValue =  xCenterEntry.getDoubleArray(gripValuesX);
+					double angleVise = 320 * 7 / 127; // /10.33
+
+				
+					
+					
+					MPC1.set(0.32);
+				MPC2.set(-0.32);
+					
+					if(XValue.length != 0) {
+
+							if(premiereMesure == false) {
+								encGauche.reset();
+								encDroit.reset();
+								ahrs.reset();
+								double trouve =  XValue[0]* 7 / 127; //10.33
+								SmartDashboard.putNumber("Trouve", trouve);
+								
+
+								
+						
+								premiereMesure = true;  
+								
+								calcul = trouve - angleVise;
+								SmartDashboard.putNumber("Calculs", calcul);
+							}
+							
+							if(premiereMesure == true) {
+								
+								double angleGyro = ahrs.getAngle();
+								SmartDashboard.putNumber("Angle Gyro", angleGyro);
+								double setPoint =  calcul - angleGyro ;
+								SmartDashboard.putNumber("Set Point", setPoint);
+								
+								double setPointTrue = -setPoint * 0.5;
+								if(setPointTrue > 0.5) {
+									setPointTrue = 0.5;
+								}
+								if (setPointTrue < -0.5) {
+									setPointTrue = -0.5;
+								}
+								m_robotDrive.arcadeDrive(-0.5, setPointTrue); //0.025
+							}
+                                                                                         
+					}else if (premiereMesure == true) {
+						double angleGyro = ahrs.getAngle();
+						SmartDashboard.putNumber("Angle Gyro v2", angleGyro);
+						double setPoint =  calcul - angleGyro ;
+						SmartDashboard.putNumber("Set Point v2", setPoint);
+						double setPointTrue = -setPoint * 0.5;
+						if(setPointTrue > 0.5) {
+							setPointTrue = 0.5;
+						}
+						if (setPointTrue < -0.5) {
+							setPointTrue = -0.5;
+						}
+						m_robotDrive.arcadeDrive(-0.5,	setPointTrue); //0.025
+			
+					}else {
+						m_robotDrive.arcadeDrive(0, -0.4);
+				}
+					//roue < 0.3
+				}else if( ordreAuto == 3) {
+					MPC1.set(0.15);
+					MPC2.set(-0.15);
+					autoPince = true;
+
+	 			
+					double turningValue = ahrs.getAngle();
+				
+					if(turningValue > 0.5) {
+						turningValue = 0.5;
+					}
+					if (turningValue < -0.5) {
+						turningValue = -0.5;
+					}
+	 			
+					m_robotDrive.arcadeDrive(0.6, turningValue );
+	 			
+					if(roue >= 0.25) {
+						ordreAuto = 4;
+					}
+				} else if (ordreAuto == 4) {
+					MPC1.set(0.55);
+					MPC2.set(-0.55);
+					if(autoLock1 == false) {
+						ahrs.reset();
+						PID_timer.reset();
+						PID_timer.start();
+						
+						
+						retourTimer.start();
+						r_pidController.enable();
+						l_pidController.enable();
+						r_pidController.setSetpoint(48);
+						l_pidController.setSetpoint(48);
+						
+						r_pidController.setAbsoluteTolerance(0.05);
+						l_pidController.setAbsoluteTolerance(0.05);
+						autoLock1 = true;
+						autoLock2 = false;
+					}
+					
+					if(r_pidController.onTarget() == true && l_pidController.onTarget() == true) {
+						ordreAuto = 5;
+					}
+					if(PID_timer.get() >= 0.9) {
+						ordreAuto = 5;
+					}
+				} else if (ordreAuto == 5) {
+		 			MPC1.set(0.15);
+		 			MPC2.set(-0.15);
+		 			r_pidController.disable();
+		 			l_pidController.disable();
+					double turningValue = -ahrs.getAngle();
+					SmartDashboard.putNumber("Turning Value", turningValue);
+					
+					if(turningValue > 0.3) {
+						turningValue = 0.3;
+					}
+					if (turningValue < -0.3) {
+						turningValue = -0.3;
+					}
+					m_robotDrive.arcadeDrive(-0.7, 0);
+					
+					if(roue <= -16) {
+						ordreAuto = 6;
+					}
+					//retourTimer.get() < 3.5
+		 		} else if (ordreAuto == 6) {
+					MPC1.set(-0.75);
+					MPC2.set(0.75);
+					
+					if(retourTimer.get() >= 0.5) {
+						ordreAuto = 7;
+					}
+		 		}else if(ordreAuto == 7) {
+		 			if(autoLock2 == false) {
+		 				ahrs.reset();
+		 				retourTimer.reset();
+		 				retourTimer.start();
+		 				
+
+		 				
+			 			PID_timer.reset();
+			 			PID_timer.start();
+		 				r_pidController.enable();
+		 				l_pidController.enable();
+		 				r_pidController.setSetpoint(180);
+		 				l_pidController.setSetpoint(180);
+		 				
+		 				autoLock1 = false;
+		 				autoLock2 = true;
+		 			}
+		 			MPC1.set(0);
+		 			MPC2.set(0);
+		 			
+		 			if(r_pidController.onTarget() == true && l_pidController.onTarget() == true) {
+		 				ordreAuto = 12;
+		 			}
+		 			
+		 			if(PID_timer.get() >= 0.9) {
+		 				ordreAuto = 12;
+		 			}
+		 	
+		 		}else	if(ordreAuto == 12) {
+		 			if(autoLock1 == false) {
+		 				ahrs.reset();
+		 				
+		 				
+		 				autoLock2 = false;
+		 				autoLock1 = true;
+		 			}
+		 			double turningValue = -ahrs.getAngle();
+					if(turningValue > 0.3) {
+						turningValue = 0.3;
+					}
+					if (turningValue < -0.3) {
+						turningValue = -0.3;
+					}
+		 			
+		 		 	m_robotDrive.arcadeDrive(0.6, 0);
+			
+				}
+	 				
+		 		
+		 		
+		 		}
+				SmartDashboard.putNumber("ordreAuto", ordreAuto);
+	
+		break;
+			
+			
+		
+		case kDefaultAuto:
+		default:
+
+			break;
