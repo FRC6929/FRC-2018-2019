@@ -1145,10 +1145,10 @@ SmartDashboard.putBoolean("La Vie", c.enabled());
 
 			}
 			else if(rotationPelle == 3) {
-				rotationPelle180Plus = true;		
-				rotationPelle90Moins = false;
+				rotationPelle180Plus = false;		
+				rotationPelle90Moins = true;
 				rotationPelle180Moins = false;
-				rotationPelle90Plus = true;
+				rotationPelle90Plus = false;
 				
 				pelleTimer.reset();
 				pelleTimer.start();
@@ -1166,16 +1166,16 @@ SmartDashboard.putBoolean("La Vie", c.enabled());
 					rotationPelle90Moins = true;
 					rotationPelle180Moins = false;
 					rotationPelle180Plus = false;
-					rotationPelle90Plus = true;
+					rotationPelle90Plus = false;
 					
 					pelleTimer.reset();
 					pelleTimer.start();
 				}
 				else if(rotationPelle == 3) {
-					rotationPelle90Plus = true;
+					rotationPelle90Plus = false;
 					
 					rotationPelle90Moins = false;
-					rotationPelle180Moins = false;
+					rotationPelle180Moins = true;
 					rotationPelle180Plus = false;
 				
 					pelleTimer.reset();
@@ -1191,18 +1191,18 @@ SmartDashboard.putBoolean("La Vie", c.enabled());
 //Vers l'exterieur
 				
 				if(rotationPelle == 1) {
-					rotationPelle180Moins = true;
+					rotationPelle180Moins = false;
 					rotationPelle90Moins = false;
 					rotationPelle180Plus = false;
-					rotationPelle90Plus = false;
+					rotationPelle90Plus = true;
 					
 					pelleTimer.reset();
 					pelleTimer.start();
 				}
 				else if(rotationPelle == 2) {
-					rotationPelle90Moins = true;
+					rotationPelle90Moins = false;
 					rotationPelle180Moins = false;
-					rotationPelle180Plus = false;
+					rotationPelle180Plus = true;
 					rotationPelle90Plus = false;
 					
 					pelleTimer.reset();
@@ -1254,7 +1254,7 @@ SmartDashboard.putBoolean("La Vie", c.enabled());
 		
 		
 		if(rotationPelle90Plus == true) {
-			if(pelleTimer.get() <= 0.3) {
+			if(pelleTimer.get() <= 0.5) {
 				MPelle1.set(0.4);
 		} else {
 			MPelle1.set(0);
@@ -1263,18 +1263,17 @@ SmartDashboard.putBoolean("La Vie", c.enabled());
 			
 		}
 		if(rotationPelle90Moins == true) {
-			if(pelleTimer.get() <= 0.3) {
+			if(pelleTimer.get() <= 0.5) {
 				MPelle1.set(-0.4);
 			}else{
 				MPelle1.set(0);
 				rotationPelle90Moins = false;
-					
 			}
 			
 	
 		}
 		if(rotationPelle180Plus == true) {
-		 if(pelleTimer.get() <= 0.6) {
+		 if(pelleTimer.get() <= 1) {
 			 MPelle1.set(0.4); 
 		 }else{
 				MPelle1.set(0);
@@ -1283,7 +1282,7 @@ SmartDashboard.putBoolean("La Vie", c.enabled());
 			}
 		}
 		if(rotationPelle180Moins == true) {
-			if(pelleTimer.get() < 0.6) {
+			if(pelleTimer.get() < 1) {
 			MPelle1.set(-0.4);
 			}else{
 				MPelle1.set(0);
