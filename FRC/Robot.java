@@ -9,16 +9,13 @@ package frc.robot;
 
 import com.revrobotics.CANSparkMax;
 import com.revrobotics.CANSparkMaxLowLevel.MotorType;
-
 import edu.wpi.cscore.UsbCamera;
 import edu.wpi.first.cameraserver.CameraServer;
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.command.Command;
-//import edu.wpi.first.wpilibj.command.Command;
 import edu.wpi.first.wpilibj.command.Scheduler;
 
-//import frc.robot.commands.AvancerMoteur;
 import frc.robot.subsystems.Moteur;
 import frc.robot.subsystems.PinceAHatch;
 import frc.robot.subsystems.PinceAngle;
@@ -48,9 +45,11 @@ public class Robot extends TimedRobot {
   Command MonterRoues;
   Command DescendreRouesAvant;
   Command DescendreRouesArriere;
-  Command roulermonte;
+  Command Roulermonte;
   Command DescendrePinceAngle;
   Command MonterPinceAngle;
+  Command DeposerBallon; 
+  Command PrendreBallon;
 
   CANSparkMax moteur = new CANSparkMax(0, MotorType.kBrushless);
 //  Command AvancerMoteur;
@@ -64,8 +63,8 @@ public class Robot extends TimedRobot {
     m_oi = new OI();
     
   UsbCamera camera = CameraServer.getInstance().startAutomaticCapture();
- //camera.setResolution(640, 360);
- camera.setResolution(480, 270);
+ camera.setResolution(640, 360);
+ //camera.setResolution(480, 270);
  camera.setFPS(15);
   
   camera.setExposureManual(40);
@@ -141,17 +140,15 @@ public class Robot extends TimedRobot {
   public void teleopPeriodic() {
     Scheduler.getInstance().run();
     if (coPilote_stick.getRawButtonPressed(3)){
-    PrendreHatch.start();
+      PrendreHatch.start();
     }
     if (coPilote_stick.getRawButtonPressed(4)){
       DeposerHatch.start();
     }
-    if (coPilote_stick.getRawButtonPressed(5) && coPilote_stick.getRawButtonPressed(6)){
+      int etapeFin = 0;
+    if (coPilote_stick.getRawButtonPressed(5) && coPilote_stick.getRawButtonPressed(6) && etapeFin == 0){
+      Roulermonte.start();
       MonterRoues.start();
-    }
-    int etapeFin = 0;
-    if (coPilote_stick.getRawButtonPressed(5) && coPilote_stick.getRawButtonPressed(6)){
-      roulermonte.start();
       etapeFin = 1;
     }
     if (coPilote_stick.getRawButtonPressed(7) && etapeFin == 1) {
@@ -165,8 +162,15 @@ public class Robot extends TimedRobot {
     if (coPilote_stick.getRawButtonPressed(9)) {
       DescendrePinceAngle.start();
     }
-  
-  
+    if (coPilote_stick.getRawButtonPressed(10)) {
+      MonterPinceAngle.start();
+    }
+    if (coPilote_stick.getRawButtonPressed(11)) {
+      DeposerBallon.start();
+    }
+    if (coPilote_stick.getRawButtonPressed(12)) {
+      PrendreBallon.start();
+    }
   }
 
   /**
