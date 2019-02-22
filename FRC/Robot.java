@@ -1,94 +1,200 @@
-/*----------------------------------------------------------------------------*/
-/* Copyright (c) 2017-2018 FIRST. All Rights Reserved.                        */
-/* Open Source Software - may be modified and shared by FRC teams. The code   */
-/* must be accompanied by the FIRST BSD license file in the root directory of */
-/* the project.                                                               */
-/*----------------------------------------------------------------------------*/
+//----------------------------------------------------------------
+//-----------------------FRC 2019---------------------------------
+//---------------------Cuivre et or-------------------------------
+//------------------Command based robot---------------------------
+//---Code d'edi utilise durant la competition week 1 a montreal---
+//--Ce code peut-etre utilise par tous afin de s'en inspirer et---
+//------------------d'apprendre a coder---------------------------
+//----------------------------------------------------------------
 
 package frc.robot;
 
-import com.revrobotics.CANSparkMax;
-import com.revrobotics.CANSparkMaxLowLevel.MotorType;
+
+
 import edu.wpi.cscore.UsbCamera;
 import edu.wpi.first.cameraserver.CameraServer;
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.command.Command;
-import edu.wpi.first.wpilibj.command.Scheduler;
 
-import frc.robot.subsystems.Moteur;
+import edu.wpi.first.wpilibj.command.Scheduler;
+import frc.robot.commands.DescendreRouesAvant;
+import frc.robot.commands.ElevateurManuel;
+import frc.robot.commands.Lvl1BallonElevateur;
+import frc.robot.commands.Lvl2BallonElevateur;
+import frc.robot.commands.Lvl3BallonElevateur;
+import frc.robot.commands.LvlSolBallonElevateur;
+import frc.robot.commands.LvlDistributeurBallonElevateur;
+import frc.robot.commands.LvlCargoBallonElevateur;
+import frc.robot.commands.Lvl1HatchElevateur;
+import frc.robot.commands.Lvl2HatchElevateur;
+import frc.robot.commands.Lvl3HatchElevateur;
+import frc.robot.commands.MonterRoues;
+import frc.robot.commands.OuvrirValveSecuriteArriere;
+import frc.robot.commands.OuvrirValveSecuriteAvant;
+import frc.robot.commands.PiloterBasePilotable;
+import frc.robot.commands.PrendreBallon;
+import frc.robot.commands.PrendreHatch;
+import frc.robot.commands.VisionProcessing;
+import frc.robot.commands.ControlerPinceAngle;
+import frc.robot.commands.ControllerValveSecurite;
+import frc.robot.commands.DeposerHatch;
+import frc.robot.commands.DescendreBoth;
+import frc.robot.commands.DescendreRouesArriere;
+import frc.robot.commands.RoulerMonte;
+import frc.robot.commands.ResetElevateur;
+import frc.robot.commands.LifterLvl2;
+import frc.robot.commands.ResetValveSecurite;
+import frc.robot.commands.AngleBallonLvl3;
+import frc.robot.commands.AngleDefault;
+import frc.robot.commands.AngleDepart;
+import frc.robot.commands.AngleHatchLvl1;
+import frc.robot.commands.AngleLvlSol;
+import frc.robot.commands.LifterManuelAvant;
+import frc.robot.commands.ArreterPinceBallon;
+import frc.robot.commands.DeposerBallon;
+
+import frc.robot.subsystems.RouesMonte;
+import frc.robot.subsystems.BasePilotable;
+import frc.robot.subsystems.ElevateurSubsystem;
+import frc.robot.subsystems.Gyro;
+import frc.robot.subsystems.Lifter;
 import frc.robot.subsystems.PinceAHatch;
 import frc.robot.subsystems.PinceAngle;
-import frc.robot.subsystems.PinceAngle1;
-import frc.robot.subsystems.SystemDesSelenoidsPourMonterALaFin;
-import frc.robot.subsystems.RouesMonte;
+import frc.robot.subsystems.ValveSecurite;
 import frc.robot.subsystems.PinceBallon;
-/**
- * The VM is configured to automatically run this class, and to call the
- * functions corresponding to each mode, as described in the TimedRobot
- * documentation. If you change the name of this class or the package after
- * creating this project, you must also update the build.gradle file in the
- * project.
- */
+
+
 public class Robot extends TimedRobot {
-  public static Moteur mouteurSubsystem = new Moteur();
+
+ public static BasePilotable BasePilotableSubsystem = new BasePilotable();
+  public static ElevateurSubsystem elevateurSubsystem = new ElevateurSubsystem();
   public static PinceAHatch hatcherSubsystem = new PinceAHatch();
-  public static SystemDesSelenoidsPourMonterALaFin lifterSubsystem = new SystemDesSelenoidsPourMonterALaFin();
+  public static Lifter lifterSubsystem = new Lifter();
   public static RouesMonte RouesMonte = new RouesMonte();
   public static PinceBallon PinceBallon = new PinceBallon();
-  public static PinceAngle1 pinceAngle1 = new PinceAngle1();
+  //public static PinceAngle1 pinceAngle1 = new PinceAngle1();
   public static PinceAngle pinceAngle = new PinceAngle();
+  public static ValveSecurite ValveSecurite = new ValveSecurite();
+  public static Gyro GyroSub = new Gyro();
+
   public static OI m_oi;
-  
+
+  Command OuvrirValveSecuriteArriere;
+  Command OuvrirValveSecuriteAvant;
   Command PrendreHatch;
   Command DeposerHatch;
   Command MonterRoues;
   Command DescendreRouesAvant;
   Command DescendreRouesArriere;
   Command Roulermonte;
-  Command DescendrePinceAngle;
-  Command MonterPinceAngle;
+//  Command DescendrePinceAngle;
+//  Command MonterPinceAngle;
+Command ControlerValveSecurite;
   Command DeposerBallon; 
+  Command ArreterLifterArriere;
   Command PrendreBallon;
+  Command ArreterPinceBallon;
+  Command DescendreBoth;
+  Command ManuelElevateur;
+  Command controllerPinceAngle;
+  Command Lvl1BallonElevateur;
+  Command Lvl2BallonElevateur;
+  Command Lvl3BallonElevateur;
+  Command LvlSolBallonElevateur;
+  Command LvlCargoBallonElevateur;
+  Command LvlDistributeurBallonElevateur;
+  Command Lvl1HatchElevateur;
+  Command Lvl2HatchElevateur;
+  Command Lvl3HatchElevateur;
+  Command AngleBallonLvl3;
+  Command AngleDefault;
+  Command AngleDepart;
+  Command AngleHatchLvl1;
+  Command LifterManuelAvant;
+  Command AngleLvlSol;
+  Command ControllerPinceAngle;
+  Command ResetElevateur;
+  Command VisionProcessing;
+  Command LifterLvl2;
+Command PiloterBasePilotable;
+  Command ResetValveSecurite;
 
-  CANSparkMax moteur = new CANSparkMax(0, MotorType.kBrushless);
-//  Command AvancerMoteur;
-  Joystick coPilote_stick = new Joystick(1);
-  /**
-   * This function is run when the robot is first started up and should be
-   * used for any initialization code.
-   */
+Joystick m_stick = new Joystick(0);
+  Joystick coPilote_stickRouge = new Joystick(1);
+  Joystick coPilote_stickBleu = new Joystick(2);
+  int etapeFin = 0;
+  boolean retracted = false;
+  int lvlSpecial = 0;
+  int lvlEtape = 0;
+
+
   @Override
   public void robotInit() {
-    m_oi = new OI();
     
-  UsbCamera camera = CameraServer.getInstance().startAutomaticCapture();
- camera.setResolution(640, 360);
- //camera.setResolution(480, 270);
- camera.setFPS(15);
-  
-  camera.setExposureManual(40);
-    //AvancerMoteur = new AvancerMoteur();
+
+    m_oi = new OI();
+    LifterManuelAvant = new LifterManuelAvant();
+    LifterLvl2 = new LifterLvl2();
+    ControlerValveSecurite = new ControllerValveSecurite();
+    OuvrirValveSecuriteArriere = new OuvrirValveSecuriteArriere();
+    OuvrirValveSecuriteAvant = new OuvrirValveSecuriteAvant();
+    ControllerPinceAngle = new ControlerPinceAngle();
+  Lvl1BallonElevateur = new Lvl1BallonElevateur();
+  Lvl2BallonElevateur = new Lvl2BallonElevateur();
+  Lvl3BallonElevateur = new Lvl3BallonElevateur();
+  LvlSolBallonElevateur = new LvlSolBallonElevateur();
+  LvlDistributeurBallonElevateur = new LvlDistributeurBallonElevateur();
+  LvlCargoBallonElevateur = new LvlCargoBallonElevateur();
+  Lvl1HatchElevateur = new Lvl1HatchElevateur();
+  Lvl2HatchElevateur = new Lvl2HatchElevateur();
+  Lvl3HatchElevateur = new Lvl3HatchElevateur();
+  VisionProcessing = new VisionProcessing();
+ ManuelElevateur = new ElevateurManuel();
+ PiloterBasePilotable = new PiloterBasePilotable();
+ DescendreBoth = new DescendreBoth();
+  PrendreHatch = new PrendreHatch();
+ DeposerHatch = new DeposerHatch();
+  MonterRoues = new MonterRoues();
+  ArreterPinceBallon = new ArreterPinceBallon();
+  DescendreRouesAvant = new DescendreRouesAvant();
+ DescendreRouesArriere = new DescendreRouesArriere();
+  Roulermonte = new RoulerMonte();
+  ResetElevateur = new ResetElevateur();
+ // DescendrePinceAngle = new DescendrePinceAngle();
+ // MonterPinceAngle = new MonterPinceAngle();
+  DeposerBallon = new DeposerBallon(); 
+  PrendreBallon = new PrendreBallon();
+  controllerPinceAngle = new ControlerPinceAngle();
+   AngleBallonLvl3 = new AngleBallonLvl3();
+   AngleDefault    = new  AngleDefault();
+   AngleDepart     = new AngleDepart();
+   AngleHatchLvl1  = new AngleHatchLvl1();
+   AngleLvlSol     = new AngleLvlSol();
+    ResetValveSecurite = new ResetValveSecurite();
+
+
+UsbCamera camera1 = CameraServer.getInstance().startAutomaticCapture(0);
+UsbCamera camera2 = CameraServer.getInstance().startAutomaticCapture(1);
+  camera1.setResolution(320, 180);
+    camera1.setFPS(30);
+ camera1.setExposureManual(30);
+ 
+ camera2.setResolution(320, 180);
+ camera2.setFPS(30);
+camera2.setExposureManual(40);
+
+
+
   }
 
-  /**
-   * This function is called every robot packet, no matter the mode. Use
-   * this for items like diagnostics that you want ran during disabled,
-   * autonomous, teleoperated and test.
-   *
-   * <p>This runs after the mode specific periodic functions, but before
-   * LiveWindow and SmartDashboard integrated updating.
-   */
+  
   @Override
   public void robotPeriodic() {
     
   }
 
-  /**
-   * This function is called once each time the robot enters Disabled mode.
-   * You can use it to reset any subsystem information you want to clear when
-   * the robot is disabled.
-   */
+
   @Override
   public void disabledInit() {
   }
@@ -98,20 +204,9 @@ public class Robot extends TimedRobot {
     Scheduler.getInstance().run();
   }
 
-  /**
-   * This autonomous (along with the chooser code above) shows how to select
-   * between different autonomous modes using the dashboard. The sendable
-   * chooser code works with the Java SmartDashboard. If you prefer the
-   * LabVIEW Dashboard, remove all of the chooser code and uncomment the
-   * getString code to get the auto name from the text box below the Gyro
-   *
-   * <p>You can add additional auto modes by adding additional commands to the
-   * chooser code above (like the commented example) or additional comparisons
-   * to the switch structure below with additional strings & commands.
-   */
   @Override
   public void autonomousInit() {
-
+  
   }
 
   /**
@@ -119,7 +214,7 @@ public class Robot extends TimedRobot {
    */
   @Override
   public void autonomousPeriodic() {
-
+   
   }
 
   @Override
@@ -128,9 +223,20 @@ public class Robot extends TimedRobot {
     // teleop starts running. If you want the autonomous to
     // continue until interrupted by another command, remove
     // this line or comment it out.
-    
-    
-    
+   etapeFin = 0;
+   lvlEtape = 0;
+   lvlSpecial = 0;
+    retracted = false;
+   
+    ResetValveSecurite.start();
+   elevateurSubsystem.disable();
+   pinceAngle.disable();
+   ManuelElevateur.start();
+   controllerPinceAngle.start();
+    ResetElevateur.start();
+
+
+
   }
 
   /**
@@ -138,45 +244,225 @@ public class Robot extends TimedRobot {
    */
   @Override
   public void teleopPeriodic() {
-    Scheduler.getInstance().run();
-    if (coPilote_stick.getRawButtonPressed(3)){
+   Scheduler.getInstance().run();
+    
+
+   if(etapeFin == 0 && retracted == false){
+  DescendreBoth.start();
+  PiloterBasePilotable.start();
+    retracted = true;
+   }
+
+
+    if (coPilote_stickBleu.getRawButtonPressed(4)){
       PrendreHatch.start();
     }
-    if (coPilote_stick.getRawButtonPressed(4)){
+
+    if (coPilote_stickBleu.getRawButtonPressed(5)){
       DeposerHatch.start();
     }
-      int etapeFin = 0;
-    if (coPilote_stick.getRawButtonPressed(5) && coPilote_stick.getRawButtonPressed(6) && etapeFin == 0){
+      
+    if (coPilote_stickBleu.getRawButton(9) && coPilote_stickBleu.getRawButton(6) && etapeFin == 0){
       Roulermonte.start();
       MonterRoues.start();
+      if(ControlerValveSecurite.isRunning() == false){
+        ControlerValveSecurite.start();
+      }
+   //   if(LifterManuelAvant.isRunning() == false){
+    //    LifterManuelAvant.start();
+    //  }
       etapeFin = 1;
-    }
-    if (coPilote_stick.getRawButtonPressed(7) && etapeFin == 1) {
+    }else if (coPilote_stickBleu.getRawButton(7) && 
+               etapeFin == 1 
+              ) {
       DescendreRouesAvant.start();
-      etapeFin = 2;
+      Roulermonte.cancel();
+      ControlerValveSecurite.cancel();
+      ResetValveSecurite.start();
     }
-    if (coPilote_stick.getRawButtonPressed(8) && etapeFin == 2) {
+    else if (coPilote_stickBleu.getRawButton(8) && etapeFin == 1
+              ) {
       DescendreRouesArriere.start();
-      etapeFin = 3;
+      etapeFin = 0;
+ 
+    }else if(coPilote_stickBleu.getRawButton(7) && coPilote_stickBleu.getRawButton(8)){
+      DescendreBoth.start();
+      
+      etapeFin = 0;
     }
-    if (coPilote_stick.getRawButtonPressed(9)) {
-      DescendrePinceAngle.start();
-    }
-    if (coPilote_stick.getRawButtonPressed(10)) {
-      MonterPinceAngle.start();
-    }
-    if (coPilote_stick.getRawButtonPressed(11)) {
+
+    if (coPilote_stickRouge.getRawButton(7)) {
       DeposerBallon.start();
     }
-    if (coPilote_stick.getRawButtonPressed(12)) {
+
+    if (coPilote_stickRouge.getRawButton(8)) {
       PrendreBallon.start();
+   }
+
+   if(coPilote_stickRouge.getRawButton(7) == false && coPilote_stickRouge.getRawButton(8) == false){
+      ArreterPinceBallon.start();
+   }
+//----------------------------
+   if(lvlEtape == 1){
+          
+    if(Lvl1BallonElevateur.isRunning() == false){
+      AngleDefault.start();
+      lvlEtape = 0;
     }
+  }else if (coPilote_stickRouge.getRawButtonPressed(4)) {
+    lvlEtape = 1;
+     Lvl1BallonElevateur.start();
+     AngleDefault.start();
+}
+//------------------------------
+
+if(lvlEtape == 2){
+      
+  if(Lvl2BallonElevateur.isRunning() == false){
+    AngleDefault.start();
+    lvlEtape = 0;
+  }
+}
+   if (coPilote_stickRouge.getRawButtonPressed(5)) {
+     Lvl2BallonElevateur.start();
+     AngleDefault.start();
+     lvlEtape = 2;
+   }
+//--------------------------------
+      
+  
+  
+  if(lvlEtape == 3){
+      
+    if(Lvl3BallonElevateur.isRunning() == false){
+      AngleBallonLvl3.start();
+      lvlEtape = 0;
+    }
+  }else if (coPilote_stickRouge.getRawButtonPressed(6)) {
+    Lvl3BallonElevateur.start();
+    AngleDefault.start();
+    lvlEtape = 3;
   }
 
-  /**
-   * This function is called periodically during test mode.
-   */
+ 
+
+  //-------------------
+if(lvlEtape == 4){
+  if(LvlSolBallonElevateur.isRunning() == false){
+    AngleLvlSol.start();
+    
+    lvlEtape = 0;
+  }
+}
+   if (coPilote_stickRouge.getRawButtonPressed(1)) {
+     LvlSolBallonElevateur.start();
+     AngleDefault.start();
+     lvlEtape = 4;
+   }
+//-------------------
+   if(lvlEtape == 5){
+    if(LvlCargoBallonElevateur.isRunning() == false){
+      AngleDefault.start();
+      lvlEtape = 0;
+    }
+
+   }
+   if (coPilote_stickRouge.getRawButtonPressed(2)) {
+     LvlCargoBallonElevateur.start();
+     AngleDefault.start();
+     lvlEtape = 5;
+   }
+//-------------------
+
+   if(lvlEtape == 6){
+  if(LvlDistributeurBallonElevateur.isRunning() == false){
+      AngleDefault.start();
+      lvlEtape = 0;
+   }  
+  }
+   if (coPilote_stickRouge.getRawButtonPressed(3)) {
+     LvlDistributeurBallonElevateur.start();
+     AngleDefault.start();
+     lvlEtape = 6;
+   }
+
+//-------------------
+   if(lvlEtape == 7){
+    if(Lvl1HatchElevateur.isRunning() == false){
+      AngleHatchLvl1.start();
+      AngleDefault.start();
+      lvlEtape = 0;
+   }
+   }
+
+   if (coPilote_stickBleu.getRawButtonPressed(1)) {
+     Lvl1HatchElevateur.start(); 
+     AngleDefault.start();
+     
+     lvlEtape = 7;
+   }
+
+//-------------------
+if(lvlEtape == 8){
+  if(Lvl2HatchElevateur.isRunning() == false){
+    AngleDefault.start();
+    lvlEtape = 0;
+ }
+}
+   if (coPilote_stickBleu.getRawButtonPressed(2)) {
+     Lvl2HatchElevateur.start();
+     AngleDefault.start();
+     lvlEtape = 8;
+   }
+
+//-------------------
+if(lvlEtape == 9){
+  if(Lvl3HatchElevateur.isRunning() == false){
+    AngleDefault.start();
+    lvlEtape = 0;
+ }
+}
+   if (coPilote_stickBleu.getRawButtonPressed(3)) {
+     Lvl3HatchElevateur.start();
+     AngleDefault.start();
+     lvlEtape = 9;
+   }
+
+  
+if(m_stick.getRawButtonPressed(4)){
+  VisionProcessing.start();
+}
+if(m_stick.getRawButtonPressed(2)){
+  VisionProcessing.cancel();
+  PiloterBasePilotable.start();
+}
+
+if(coPilote_stickBleu.getRawAxis(1) < -0.1 || coPilote_stickBleu.getRawAxis(1) > 0.1){
+ if(ManuelElevateur.isRunning() == false){
+  ManuelElevateur.start();
+ }
+ 
+}
+if(coPilote_stickBleu.getRawAxis(0) < -0.1 || coPilote_stickBleu.getRawAxis(0) > 0.1){
+  if(ControllerPinceAngle.isRunning() == false){
+    ControllerPinceAngle.start();
+  }
+
+}
+
+if(m_stick.getRawButton(5) && m_stick.getRawButton(6)){
+    LifterLvl2.start();
+    etapeFin = 1;
+}
+
+
+
+  }
+
+
   @Override
   public void testPeriodic() {
   }
+
 }
+
