@@ -7,17 +7,18 @@
 
 package frc.robot;
 
+//import frc.robot.commands.AvancerMoteur;
+//import frc.robot.commands.ReculerMoteur;
 
 /**
  * This class is the glue that binds the controls on the physical operator
  * interface to the commands and command groups that allow control of the robot.
  */
-public class OI { 
- 
- 
-  public OI(){
+public class OI {
 
-  
+  public OI(){
+   // avancerButton.whileHeld(new AvancerMoteur());
+ //   reculerButton.whileHeld(new ReculerMoteur());
   }
   //// CREATING BUTTONS
   // One type of button is a joystick button which is any button on a
