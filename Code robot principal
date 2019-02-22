@@ -1,10 +1,10 @@
 /*----------------------------------------------------------------------------*/
-/* 	      Code du betabot de robotique cuivre et or 2018                  */
+/* 	      Code du betabot de robotique cuivre et or 2018                	  */
 /*  Comme nous supportons le professionalisme coopératif, vous pouvez vous   */
-/*  		  inspirer de ce code sans aucune gene.			      */
+/*  		  inspirer de ce code sans aucune gene.			     			 */
 /*                                                                            */
-/* 	    (C'est toutefois bien mieux si vous crez le votre,                */
-/*		   il n'y a pas mieux pour se pratique                        */
+/* 	    (C'est toutefois bien mieux si vous crez le votre,             		   */
+/*		   il n'y a pas mieux pour se pratique                       		 */
 /*----------------------------------------------------------------------------*/
 //Ps. oui il n'y a pas d'accent. Fichtre d'ASCII
 
@@ -31,7 +31,7 @@ import edu.wpi.first.wpilibj.drive.DifferentialDrive;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.CameraServer;
-import edu.wpi.first.wpilibj.Compressor;
+//import edu.wpi.first.wpilibj.Compressor;
 import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.DoubleSolenoid;
 import edu.wpi.first.wpilibj.DriverStation;
@@ -106,7 +106,7 @@ public class Robot extends TimedRobot {
 	 double[] centerX;
 	 
 	 
-	 Compressor c = new Compressor(0);
+	// Compressor c = new Compressor(0);
 	 //boolean enabled = c.enabled();
 	//Variables personnalisees (Qui ne sont que des variables fictives et non pas des elements du robot)
 	
@@ -151,10 +151,12 @@ public class Robot extends TimedRobot {
 		UsbCamera camera = CameraServer.getInstance().startAutomaticCapture();
 		camera.setResolution(640, 360);
 		camera.setFPS(15);
+		
+		camera.setExposureManual(30);
 
 		limitswitchPince = new DigitalInput(6);
 
-
+		
 		//Encoders
 //Enc 1 = encoder de la pince
 		encDroit = new Encoder(0, 1, false, Encoder.EncodingType.k1X);
@@ -1203,12 +1205,12 @@ public class Robot extends TimedRobot {
 				PID_timer.start();
 				r_pidController.enable();
 				l_pidController.enable();
-				r_pidController.setSetpoint(72.5);
-				l_pidController.setSetpoint(72.5);
+				r_pidController.setSetpoint(77);
+				l_pidController.setSetpoint(77);
 				r_pidController.setOutputRange(-0.8, 0.8);
 				l_pidController.setOutputRange(-0.8, 0.8);
-				r_pidController.setAbsoluteTolerance(0.01);
-				l_pidController.setAbsoluteTolerance(0.01);
+				r_pidController.setAbsoluteTolerance(0.001);
+				l_pidController.setAbsoluteTolerance(0.001);
 				autoLock1 = true;
 				autoLock2 = false;
 			}
@@ -1255,7 +1257,7 @@ public class Robot extends TimedRobot {
 			
 			m_robotDrive.arcadeDrive(0.72, -turningValue * 0.7);
 			
-			if(roue >= 4.5 ) { //4.6 //5.2
+			if(roue >= 4.65 ) { //4.6 //5.2
  				ordreAuto = 3;
 			}
 			//PID_timer.get() < 1
@@ -1270,8 +1272,8 @@ public class Robot extends TimedRobot {
 				l_pidController.enable();
 				r_pidController.setAbsoluteTolerance(0.005);
 				l_pidController.setAbsoluteTolerance(0.005);
-				r_pidController.setSetpoint(50);
-				l_pidController.setSetpoint(50);
+				r_pidController.setSetpoint(55);
+				l_pidController.setSetpoint(55);
 				
 				autoLock1 = true;
 				autoLock2 = false;
@@ -2580,7 +2582,7 @@ public class Robot extends TimedRobot {
 		
 //Network Tables
 	//C'est la qu'on va mettre nos Network Tables, si besoin est	
-SmartDashboard.putBoolean("La Vie", c.enabled());
+//SmartDashboard.putBoolean("La Vie", c.enabled());
 	
 
 
@@ -2608,11 +2610,14 @@ SmartDashboard.putBoolean("La Vie", c.enabled());
 			}
 				
 			
-			
+			if 
 			
 			
 			rotationPelle = 1;
 			*///}
+			
+			
+			
 			if(coPilote_stick.getRawButton(9)==true) {
 //Vers l'interieur
 				MPelle1.set(-0.6);
@@ -2879,8 +2884,8 @@ SmartDashboard.putBoolean("La Vie", c.enabled());
 			
 		//Mode lent	
 			if (lent == false){
-				double ystick = m_stick.getRawAxis(2) * 0.8 - m_stick.getRawAxis(3) * 0.8;
-				double xstick = - m_stick.getRawAxis(0) * 0.75;
+				double ystick = m_stick.getRawAxis(2) * 02 - m_stick.getRawAxis(3) * 2;
+				double xstick = - m_stick.getRawAxis(0) * 2;
 				m_robotDrive.arcadeDrive(-ystick, xstick);
 				}
 			
@@ -2954,6 +2959,7 @@ SmartDashboard.putBoolean("La Vie", c.enabled());
 			r_pidController.setSetpoint(obj);
 			l_pidController.setSetpoint(obj);
 			Bbuton = true;
+			
 			SmartDashboard.putNumber("PID objectif", obj);
 		//	pneuPince.set(DoubleSolenoid.Value.kForward);
 			}
