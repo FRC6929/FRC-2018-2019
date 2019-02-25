@@ -10,41 +10,42 @@ package frc.robot.commands;
 import edu.wpi.first.wpilibj.command.Command;
 import frc.robot.Robot;
 
-
-public class DeposerHatch extends Command {
-  public DeposerHatch() {
-    // Use requires() here to declare subsystem dependencies
-    // eg. requires(chassis);
-    requires(Robot.hatcherSubsystem);
+public class LvlCargoBallonElevateur extends Command {
+  public LvlCargoBallonElevateur() {
+  requires(Robot.elevateurSubsystem);  
   }
 
-  // Called just before this Command runs the first time
   @Override
   protected void initialize() {
-  Robot.hatcherSubsystem.Deposer();
+  Robot.elevateurSubsystem.enable();
+  Robot.elevateurSubsystem.setSetpoint(60);
+  Robot.elevateurSubsystem.setAbsoluteTolerance(0.01);
+  setTimeout(2);
   }
 
-  // Called repeatedly when this Command is scheduled to run
   @Override
   protected void execute() {
-  
   }
 
-  // Make this return true when this Command no longer needs to run execute()
   @Override
   protected boolean isFinished() {
-    return false;
+    boolean finished = Robot.elevateurSubsystem.onTarget();
+    boolean TimeOut = isTimedOut();
+    boolean Final = false;
+
+    if(finished == true || TimeOut == true){
+      Final = true;
+    }
+    return Final;
   }
 
-  // Called once after isFinished returns true
   @Override
   protected void end() {
+  Robot.elevateurSubsystem.disable();
   }
 
-  // Called when another command which requires one or more of the same
-  // subsystems is scheduled to run
   @Override
   protected void interrupted() {
-    end();
+    Robot.elevateurSubsystem.disable();
   }
 }

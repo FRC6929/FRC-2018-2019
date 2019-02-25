@@ -8,18 +8,17 @@
 package frc.robot.subsystems;
 
 import com.revrobotics.CANSparkMax;
+import com.revrobotics.CANSparkMax.IdleMode;
 import com.revrobotics.CANSparkMaxLowLevel.MotorType;
 
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.command.Subsystem;
 
-/**
- * Add your docs here.
- */
+
 public class RouesMonte extends Subsystem {
   // Put methods for controlling this subsystem
   // here. Call these from Commands.
-  CANSparkMax moteurMonte = new CANSparkMax(6, MotorType.kBrushless);
+  CANSparkMax moteurMonte = new CANSparkMax(6, MotorType.kBrushed); //nouveau moteur, pas une erreure
   @Override
   public void initDefaultCommand() {
   
@@ -31,6 +30,14 @@ public class RouesMonte extends Subsystem {
   
   public void mountedDrive(Joystick m_stick){
     double ystick = m_stick.getRawAxis(2) * 1 - m_stick.getRawAxis(3) * 1;
-    moteurMonte.set(ystick);
+    moteurMonte.set(-ystick);
+   
+  }
+  public void Brake(){
+    moteurMonte.setIdleMode(IdleMode.kBrake);
+  }
+
+  public void Coast(){
+    moteurMonte.setIdleMode(IdleMode.kCoast);
   }
 }

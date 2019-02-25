@@ -7,43 +7,48 @@
 
 package frc.robot.commands;
 
+import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.command.Command;
 import frc.robot.Robot;
 
-public class DeposerBallon extends Command {
-  public DeposerBallon() {
-   
-    // Use requires() here to declare subsystem dependencies
-    // eg. requires(chassis);
-  requires(Robot.PinceBallon);
+public class LifterManuelAvant extends Command {
+  public LifterManuelAvant() {
+    requires(Robot.ValveSecurite);
   }
 
-  // Called just before this Command runs the first time
   @Override
   protected void initialize() {
+    
+    Robot.ValveSecurite.fermerAvant();
   }
 
-  // Called repeatedly when this Command is scheduled to run
   @Override
   protected void execute() {
-  Robot.PinceBallon.Deposer();
+    Joystick m_stick = new Joystick(2);
+
+    if(m_stick.getRawButton(9)){
+      Robot.ValveSecurite.fermerAvant();
+    }else{
+      Robot.ValveSecurite.OuvrirAvnt();
+    }
+
+    if(m_stick.getRawButton(6)){
+      Robot.ValveSecurite.fermerArriere();
+    }else{
+      Robot.ValveSecurite.OuvrirArriere();
+    }
   }
 
-  // Make this return true when this Command no longer needs to run execute()
   @Override
   protected boolean isFinished() {
     return false;
   }
 
-  // Called once after isFinished returns true
   @Override
   protected void end() {
   }
 
-  // Called when another command which requires one or more of the same
-  // subsystems is scheduled to run
   @Override
   protected void interrupted() {
-    end();
   }
 }

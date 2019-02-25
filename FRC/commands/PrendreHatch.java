@@ -5,31 +5,37 @@
 /* the project.                                                               */
 /*----------------------------------------------------------------------------*/
 
-package frc.robot.subsystems;
+package frc.robot.commands;
 
-import edu.wpi.first.wpilibj.DoubleSolenoid;
-import edu.wpi.first.wpilibj.DoubleSolenoid.Value;
-import edu.wpi.first.wpilibj.command.Subsystem;
+import edu.wpi.first.wpilibj.command.Command;
+import frc.robot.Robot;
 
-
-public class PinceAHatch extends Subsystem {
-  DoubleSolenoid hatcherPneu = new DoubleSolenoid(0, 2, 3);
+public class PrendreHatch extends Command {
+  public PrendreHatch() {
+  requires(Robot.hatcherSubsystem);
+  }
 
   @Override
-  public void initDefaultCommand() {
+  protected void initialize() {
+ Robot.hatcherSubsystem.Prendre();
   }
 
-  public void Prendre() {
-  hatcherPneu.set(Value.kReverse);
-
-  }
-
-  public void Deposer() {
-  hatcherPneu.set(Value.kForward);
+  @Override
+  protected void execute() {
   
   }
 
+  @Override
+  protected boolean isFinished() {
+    return false;
+  }
 
+  @Override
+  protected void end() {
+  }
+
+  @Override
+  protected void interrupted() {
+  end();
+  }
 }
-  
-

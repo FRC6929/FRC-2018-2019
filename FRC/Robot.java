@@ -30,8 +30,6 @@ import frc.robot.commands.Lvl1HatchElevateur;
 import frc.robot.commands.Lvl2HatchElevateur;
 import frc.robot.commands.Lvl3HatchElevateur;
 import frc.robot.commands.MonterRoues;
-import frc.robot.commands.OuvrirValveSecuriteArriere;
-import frc.robot.commands.OuvrirValveSecuriteAvant;
 import frc.robot.commands.PiloterBasePilotable;
 import frc.robot.commands.PrendreBallon;
 import frc.robot.commands.PrendreHatch;
@@ -137,8 +135,6 @@ Joystick m_stick = new Joystick(0);
     LifterManuelAvant = new LifterManuelAvant();
     LifterLvl2 = new LifterLvl2();
     ControlerValveSecurite = new ControllerValveSecurite();
-    OuvrirValveSecuriteArriere = new OuvrirValveSecuriteArriere();
-    OuvrirValveSecuriteAvant = new OuvrirValveSecuriteAvant();
     ControllerPinceAngle = new ControlerPinceAngle();
   Lvl1BallonElevateur = new Lvl1BallonElevateur();
   Lvl2BallonElevateur = new Lvl2BallonElevateur();
@@ -261,16 +257,18 @@ camera2.setExposureManual(40);
     if (coPilote_stickBleu.getRawButtonPressed(5)){
       DeposerHatch.start();
     }
-      
+  //---------Lifter Lvl 3, toutes les etapes----------
     if (coPilote_stickBleu.getRawButton(9) && coPilote_stickBleu.getRawButton(6) && etapeFin == 0){
       Roulermonte.start();
       MonterRoues.start();
       if(ControlerValveSecurite.isRunning() == false){
         ControlerValveSecurite.start();
       }
+
    //   if(LifterManuelAvant.isRunning() == false){
     //    LifterManuelAvant.start();
     //  }
+    
       etapeFin = 1;
     }else if (coPilote_stickBleu.getRawButton(7) && 
                etapeFin == 1 
@@ -291,6 +289,13 @@ camera2.setExposureManual(40);
       etapeFin = 0;
     }
 
+
+    //----------Lifter Lvl 2--------------------
+if(m_stick.getRawButton(5) && m_stick.getRawButton(6)){
+  LifterLvl2.start();
+  etapeFin = 1;
+}
+
     if (coPilote_stickRouge.getRawButton(7)) {
       DeposerBallon.start();
     }
@@ -302,7 +307,9 @@ camera2.setExposureManual(40);
    if(coPilote_stickRouge.getRawButton(7) == false && coPilote_stickRouge.getRawButton(8) == false){
       ArreterPinceBallon.start();
    }
-//----------------------------
+
+//-----Elevateur rouge/ballon lvl 1-----------------------
+
    if(lvlEtape == 1){
           
     if(Lvl1BallonElevateur.isRunning() == false){
@@ -314,7 +321,8 @@ camera2.setExposureManual(40);
      Lvl1BallonElevateur.start();
      AngleDefault.start();
 }
-//------------------------------
+
+//-----Elevateur rouge/ballon lvl 2----------------------
 
 if(lvlEtape == 2){
       
@@ -328,10 +336,9 @@ if(lvlEtape == 2){
      AngleDefault.start();
      lvlEtape = 2;
    }
-//--------------------------------
+
+//-----Elevateur rouge/ballon lvl 3----------------------
       
-  
-  
   if(lvlEtape == 3){
       
     if(Lvl3BallonElevateur.isRunning() == false){
@@ -344,9 +351,8 @@ if(lvlEtape == 2){
     lvlEtape = 3;
   }
 
- 
+//-----Elevateur rouge/ballon lvl Sol----------------------
 
-  //-------------------
 if(lvlEtape == 4){
   if(LvlSolBallonElevateur.isRunning() == false){
     AngleLvlSol.start();
@@ -359,7 +365,7 @@ if(lvlEtape == 4){
      AngleDefault.start();
      lvlEtape = 4;
    }
-//-------------------
+//-----Elevateur rouge/ballon lvl Cargo----------------------
    if(lvlEtape == 5){
     if(LvlCargoBallonElevateur.isRunning() == false){
       AngleDefault.start();
@@ -372,7 +378,7 @@ if(lvlEtape == 4){
      AngleDefault.start();
      lvlEtape = 5;
    }
-//-------------------
+//-----Elevateur rouge/ballon lvl Distributeur----------------
 
    if(lvlEtape == 6){
   if(LvlDistributeurBallonElevateur.isRunning() == false){
@@ -386,7 +392,7 @@ if(lvlEtape == 4){
      lvlEtape = 6;
    }
 
-//-------------------
+//-----Elevateur bleu/hatch lvl 1----------------------
    if(lvlEtape == 7){
     if(Lvl1HatchElevateur.isRunning() == false){
       AngleHatchLvl1.start();
@@ -402,7 +408,7 @@ if(lvlEtape == 4){
      lvlEtape = 7;
    }
 
-//-------------------
+//-----Elevateur bleu/hatch lvl 2----------------------
 if(lvlEtape == 8){
   if(Lvl2HatchElevateur.isRunning() == false){
     AngleDefault.start();
@@ -415,7 +421,7 @@ if(lvlEtape == 8){
      lvlEtape = 8;
    }
 
-//-------------------
+//-----Elevateur bleu/hatch lvl 3----------------------
 if(lvlEtape == 9){
   if(Lvl3HatchElevateur.isRunning() == false){
     AngleDefault.start();
@@ -428,15 +434,17 @@ if(lvlEtape == 9){
      lvlEtape = 9;
    }
 
-  
+//---------Vision, pilote stick button 2 et 4----------  
 if(m_stick.getRawButtonPressed(4)){
   VisionProcessing.start();
 }
+
 if(m_stick.getRawButtonPressed(2)){
   VisionProcessing.cancel();
   PiloterBasePilotable.start();
 }
 
+//-------Modes manuels, annuler auto----------------
 if(coPilote_stickBleu.getRawAxis(1) < -0.1 || coPilote_stickBleu.getRawAxis(1) > 0.1){
  if(ManuelElevateur.isRunning() == false){
   ManuelElevateur.start();
@@ -450,10 +458,7 @@ if(coPilote_stickBleu.getRawAxis(0) < -0.1 || coPilote_stickBleu.getRawAxis(0) >
 
 }
 
-if(m_stick.getRawButton(5) && m_stick.getRawButton(6)){
-    LifterLvl2.start();
-    etapeFin = 1;
-}
+
 
 
 

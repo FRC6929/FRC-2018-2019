@@ -7,30 +7,33 @@
 
 package frc.robot.subsystems;
 
-import com.revrobotics.CANSparkMax;
-import com.revrobotics.CANSparkMaxLowLevel.MotorType;
+import com.ctre.phoenix.motorcontrol.ControlMode;
+import com.ctre.phoenix.motorcontrol.can.VictorSPX;
 
 import edu.wpi.first.wpilibj.command.Subsystem;
 
-/**
- * Add your docs here.
- */
+
 public class PinceBallon extends Subsystem {
   // Put methods for controlling this subsystem
   // here. Call these from Commands.
-CANSparkMax MPR1 = new CANSparkMax(0, MotorType.kBrushless);
-CANSparkMax MPR2 = new CANSparkMax(1, MotorType.kBrushless);
+  VictorSPX MPR1 = new VictorSPX(0);
+  VictorSPX MPR2 = new VictorSPX(1);
+  public PinceBallon(){
+   }
 @Override
   public void initDefaultCommand() {
-    // Set the default command for a subsystem here.
-    // setDefaultCommand(new MySpecialCommand());
   }
   public void Prendre(){
-  MPR1.set(-0.6);
-  MPR2.set(0.6);
+    MPR2.set(ControlMode.PercentOutput, -0.6);
+    MPR1.set(ControlMode.PercentOutput, -0.6);
   }
   public void Deposer(){
-  MPR1.set(0.6);
-  MPR2.set(-0.6);
+    MPR1.set(ControlMode.PercentOutput, 0.6);
+    MPR2.set(ControlMode.PercentOutput, 0.6);
+
+  }
+  public void Arreter(){
+    MPR1.set(ControlMode.PercentOutput, 0);
+    MPR2.set(ControlMode.PercentOutput, 0);
   }
 }

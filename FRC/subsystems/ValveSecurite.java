@@ -11,30 +11,33 @@ import edu.wpi.first.wpilibj.DoubleSolenoid;
 import edu.wpi.first.wpilibj.DoubleSolenoid.Value;
 import edu.wpi.first.wpilibj.command.Subsystem;
 
-/**
- * Add your docs here.
- */
-public class SystemDesSelenoidsPourMonterALaFin extends Subsystem {
-  DoubleSolenoid rouesAvant = new DoubleSolenoid(0, 1);
-  DoubleSolenoid rouesArriere = new DoubleSolenoid(2, 3);
- 
+public class ValveSecurite extends Subsystem {
   
-  // Put methods for controlling this subsystem
-  // here. Call these from Commands.
-
+  double offset = 0;
+  
+DoubleSolenoid valveSecuriteAvant = new DoubleSolenoid(1, 2, 3);
+DoubleSolenoid valveSecuriteArriere = new DoubleSolenoid(1, 0, 1);
   @Override
   public void initDefaultCommand() {
-    // Set the default command for a subsystem here.
-    // setDefaultCommand(new MySpecialCommand());
   }
-  public void monterRoues(){
-    rouesAvant.set(Value.kForward);
-    rouesArriere.set(Value.kForward);
+public ValveSecurite(){
+
+  
+}
+public void OuvrirAvnt(){
+      valveSecuriteAvant.set(Value.kForward);
+    
   }
-  public void descendreRouesAvant(){
-    rouesAvant.set(Value.kReverse);
+
+  public void OuvrirArriere(){
+    valveSecuriteArriere.set(Value.kForward);
   }
-  public void descendreRouesArriere(){
-    rouesArriere.set(Value.kReverse);
+  public void fermerAvant(){
+    valveSecuriteAvant.set(Value.kReverse);
   }
+  public void fermerArriere(){
+    valveSecuriteArriere.set(Value.kReverse);
+  }
+
+
 }

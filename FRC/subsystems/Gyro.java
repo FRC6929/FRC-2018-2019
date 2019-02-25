@@ -6,30 +6,46 @@
 /*----------------------------------------------------------------------------*/
 
 package frc.robot.subsystems;
+import edu.wpi.first.wpilibj.SPI;
+import com.kauailabs.navx.frc.AHRS;
 
-import edu.wpi.first.wpilibj.DoubleSolenoid;
-import edu.wpi.first.wpilibj.DoubleSolenoid.Value;
 import edu.wpi.first.wpilibj.command.Subsystem;
+import frc.robot.commands.GyroValues;
 
+public class Gyro extends Subsystem {
 
-public class PinceAHatch extends Subsystem {
-  DoubleSolenoid hatcherPneu = new DoubleSolenoid(0, 2, 3);
+  AHRS ahrs;
 
+  public Gyro(){
+    ahrs = new AHRS(SPI.Port.kMXP);
+  }
   @Override
   public void initDefaultCommand() {
+    setDefaultCommand(new GyroValues());
   }
 
-  public void Prendre() {
-  hatcherPneu.set(Value.kReverse);
-
+  public double GetPitch(){
+    double pitch = ahrs.getPitch();
+    
+    return pitch; 
   }
 
-  public void Deposer() {
-  hatcherPneu.set(Value.kForward);
-  
+  public double GetAngle(){
+    double angle = ahrs.getAngle();
+    return angle;
   }
 
+  public double GetRoll(){
+    double Roll = ahrs.getRoll();
+    return Roll;
+  }
 
+  public double GetYaw(){
+    double Yaw = ahrs.getYaw();
+    return Yaw;
+  }
+
+  public void resetAhrs(){
+    ahrs.reset();
+  }
 }
-  
-
