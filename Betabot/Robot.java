@@ -1,21 +1,18 @@
 /*----------------------------------------------------------------------------*/
-/* 	      Code du betabot de robotique cuivre et or 2018                	    */
+/* 	      Code du betabot de robotique cuivre et or 2018                  */
 /*  Comme nous supportons le professionalisme coopératif, vous pouvez vous    */
-/*  		  inspirer de ce code sans aucune gene.			     		               	  */
+/*  		  inspirer de ce code sans aucune gene.			      */
 /*                                                                            */
-/* 	    (C'est toutefois bien mieux si vous crez le votre,             		    */
-/*		   il n'y a pas mieux pour se pratique                       		        */
+/* 	    (C'est toutefois bien mieux si vous crez le votre,                */
+/*		   il n'y a pas mieux pour se pratiquer                       */
 /*----------------------------------------------------------------------------*/
-//Ps. oui il n'y a pas d'accent. Fichtre d'ASCII
+//Ps. oui il n'y a pas d'accent. Meme dans les commentaires, ca fait planter le gradle
 
-//Nom du projet
 package org.usfirst.frc.team6929.robot;
 
+//Importations de code des differentes librairies
 
 import com.kauailabs.navx.frc.AHRS;
-
-//Importations de code de la librairie de first
-
 import edu.wpi.cscore.UsbCamera;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableEntry;
@@ -51,21 +48,26 @@ public class Robot extends TimedRobot {
 	Spark MPC1 = new Spark(3);
 	Spark MPC2 = new Spark(4);
 	Spark MPelle1 = new Spark(5);
+	
 	private DifferentialDrive m_robotDrive = new DifferentialDrive(leftMotor, rightMotor);
 	private Joystick m_stick = new Joystick(0);
 	private Joystick coPilote_stick = new Joystick(1);
+	
 	private Timer limit_timer = new Timer();
 	private Timer yButtonTimer = new Timer();
 	private Timer PID_timer = new Timer();
 	private Timer retourTimer = new Timer();
 	private Timer pelleTimer = new Timer();
-	 AHRS ahrs;
-     DigitalInput limitswitchPince;
-
-     Encoder encGauche;
-     Encoder encDroit;
-     Encoder encPelle;
-     Encoder encPince;
+	
+	AHRS ahrs;
+   	DigitalInput limitswitchPince;
+	
+	Encoder encGauche;
+    	Encoder encDroit;
+     	Encoder encPelle;
+     	Encoder encPince;
+     
+	
 //Chooser
 	//Ce sont les variables permettant de choisir le mode autonome avant le match
 	//Elles sont un peu speciales a cause de cela
@@ -90,24 +92,26 @@ public class Robot extends TimedRobot {
 		private static final double kI = 0;    
 		private static final double kD = -0.065; //-0.065
 		
-	//Ont annonce le controlleur PID
+	//On annonce le controlleur PID
+	
 		private PIDController r_pidController;
 		private PIDController l_pidController;
 
 		private PIDController encPince_pidController;
+	
 	//Les variables du pneumatic
-//		DoubleSolenoid exampleDouble = new DoubleSolenoid(0, 7);
+	
+		//DoubleSolenoid exampleDouble = new DoubleSolenoid(0, 7);
 		DoubleSolenoid pneuPince = new DoubleSolenoid(4, 5);
 		DoubleSolenoid pneuPelle = new DoubleSolenoid(6, 7);
-	//	DoubleSolenoid pneuPelleL = new DoubleSolenoid(1, 6);
+		//DoubleSolenoid pneuPelleL = new DoubleSolenoid(1, 6);
 		
-	//Ah ce tres cher Network Table
-	NetworkTableEntry xCenterEntry;
-	 double[] centerX;
+	//Ah ce tres cher Network Table, utilise pour GRIP
+	
+		NetworkTableEntry xCenterEntry;
+	 	double[] centerX;
 	 
 	 
-	// Compressor c = new Compressor(0);
-	 //boolean enabled = c.enabled();
 	//Variables personnalisees (Qui ne sont que des variables fictives et non pas des elements du robot)
 	
 	boolean Bbuton = false;
@@ -135,6 +139,7 @@ public class Robot extends TimedRobot {
 	boolean rotationPelle180Plus = false;
 	boolean rotationPelle180Moins = false;
 	boolean pelleHaut = false;
+	
 //Fin de l'annonce des variables
 
 //-----------------------Lancement du robot------------------------------------------
@@ -142,27 +147,27 @@ public class Robot extends TimedRobot {
 	public void robotInit() {
 	      try {
 	          ahrs = new AHRS(SPI.Port.kMXP); 
-	      } catch (RuntimeException ex ) {
+	      } catch (RuntimeException ex) {
 	          DriverStation.reportError("Error instantiating navX-MXP:  " + ex.getMessage(), true);
 	      }
 	
 //On setup certaines pieces des le demarage
-	      ahrs.reset();
+	      	ahrs.reset();
+		
 		UsbCamera camera = CameraServer.getInstance().startAutomaticCapture();
 		camera.setResolution(640, 360);
 		camera.setFPS(15);
-		
 		camera.setExposureManual(30);
 
 		limitswitchPince = new DigitalInput(6);
 
 		
 		//Encoders
-//Enc 1 = encoder de la pince
+
 		encDroit = new Encoder(0, 1, false, Encoder.EncodingType.k1X);
 		encGauche = new Encoder (2,3, false, Encoder.EncodingType.k1X);
 		encPince = new Encoder(4,5,false, Encoder.EncodingType.k1X);
-	//	enc1.setDistancePerPulse(360/497);
+		//enc1.setDistancePerPulse(360/497);
 		
 //Les trois versions du code de pneumatic qu'on peut utiliser, a se rappeler
 		//exampleDouble.set(DoubleSolenoid.Value.kOff);
@@ -171,14 +176,14 @@ public class Robot extends TimedRobot {
 		
 		
 //Network Tables
-	//On commence a collecter les donnes du network
+	//On commence a collecter les donnees du network
 	
 		NetworkTableInstance inst = NetworkTableInstance.getDefault();
 		NetworkTable table = inst.getTable("GRIP/Contours");
 		xCenterEntry = table.getEntry("centerX");
 		
 //Selection mode auto
-	//On ajouter des options de mode autonomes
+	//On ajoute des options de mode autonomes
 	
 			m_chooser.addDefault("Mode default", kDefaultAuto);
 			m_chooser.addObject("Mode A et B - Gauche", kCustomAuto1);
@@ -215,7 +220,7 @@ public class Robot extends TimedRobot {
 //-----------------------------On start le mode autonome------------------------- 
 	@Override
 	public void autonomousInit() {
-	//Ont active certains systemes
+	//Ont active ou reinitialise certains systemes
 		encPince.reset();
 		encGauche.reset();
 		encDroit.reset();
@@ -237,6 +242,7 @@ public class Robot extends TimedRobot {
 		autoLock2 = true;
 		retourAuto = false;
 		premiereMesure = false;
+		
 		ahrs.reset();
 		ahrs.resetDisplacement();
 //Fin de autonomousInit
