@@ -254,14 +254,22 @@ public class Robot extends TimedRobot {
 
 	@Override
 	public void autonomousPeriodic() {
-		 double countGauche = encGauche.get();
+	//on lit les differents outilis de mesure sur le robot
+	//Ici, c'est les encodeurs sur les roues	
+		
+			double countGauche = encGauche.get();
 			double countDroit = encDroit.get();
 			double roueGauche = -countGauche/240;
 			double roueDroit = -countDroit/240;
 			double rouefalse = roueGauche - roueDroit;
 			double roue = rouefalse / 2;
-	//On selectione le mode autonome choisit
-	
+		
+	//On verifie le mode autonome choisie sur le smartDashboard
+	//Dependament du mode choisis, le parcours, et donc les etapes, sera different
+	//Ainsi, il faut tout changer pour chaque mode autonome
+	//Le parcours est pre-defini, avec une partie en reconnaissance visuelle afin de s'assurer que
+	//le robot appercoive et prenne la carrote (Le cylindre qu'il faut rammener)
+		
 		switch (m_autoSelected) {
 		case kCustomAuto1:
 			 SmartDashboard.putNumber("Ok",1);
