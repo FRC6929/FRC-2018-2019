@@ -6,7 +6,7 @@
 /* 	    (C'est toutefois bien mieux si vous crez le votre,                */
 /*		   il n'y a pas mieux pour se pratiquer                       */
 /*----------------------------------------------------------------------------*/
-//Ps. oui il n'y a pas d'accent. Meme dans les commentaires, ca fait planter le gradle
+//Ps. oui il n'y a pas d'accent. Meme dans les commentaires, ca fait planter le gradle 😥
 
 package org.usfirst.frc.team6929.robot;
 
